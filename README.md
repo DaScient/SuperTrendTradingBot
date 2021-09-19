@@ -1,5 +1,7 @@
 # SuperTrendTradingBot
-A DaScient, LLC proprietary software &amp; non-ML approach to the application of the SuperTrend indicator designed to execute buy &amp; sell orders to Binance.US using python.
+A [DaScient Capital, LP](https://dascientcapital.us) proprietary software &amp; non-ML approach to the application of the SuperTrend indicator designed to execute buy &amp; sell orders to Binance.US using python. 
+
+Our number one mission is to serve the remaining 99.99% of low-income, underprivileged, and misrepresented communities of the world. We wholly believe that through teamwork, technical collaborations, and a bit of computational science we can provide a financial vehicle for the curious individual, tech entrepreneurs, families & family offices, as well as, small & non-profit organizations.
 
 ---
 
@@ -18,16 +20,18 @@ Although our team is working very hard to get the fully user-friendly app develo
 Here's what you'll currently need in order to execute the bot locally on your machine. (An introductory Python crash course probably wouldn't hurt.) If you do run with it we seek your inputs, suggestions, and ideas that you can prove have a place in our code. Whether it's to help the bot run more efficiently or how we can better scale our project. Your thoughts are welcome! This program is far from perfect, but your support and growing interest we give us the encouragement we need to get this released and trading as smoothly as we possible. Don't hesitate to contact us if there's anything we can do to help: contact@dascient.com
 
 #### Requirements
-1. Latest Python (3.9.7)
+1. Python (Latest +3.9.7)
 2. Jupyter Notebook - Anaconda (mini-conda will certainly suffice)
 3. Binance.US crypto brokerage account. (API_KEY, API_SECRET) 
-4. Lastly, you'll need this repository. 
+4. Lastly, you'll need this repository cloned somewhere easy to find. (i.e ./Desktop/GitHub will work just fine.)
 
 Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?ref=52441695)
 1. After login, go to the menu settings and find API MANAGEMENT.
-2. Create API.
+2. Create an API and follow approval directives.
 3. Save and KEEP ULTRA SAFE your api.key & api.secret (in a config.py, follow format.)
-4. Then go into your terminal > find where the binance_bot_vX.py is located > run >>python binance_bot_vX.py)
+4. Then go into your terminal 
+ a. Locate binance_bot.py (i.e. >>cd Desktop/GitHub)
+ b. Run/execute by typing: >>python binance_bot.py 
 
 ### SuperTrend - Data :computer:
 
@@ -49,6 +53,6 @@ That is, it is to be developed with "plug-and-play" design in order to develop d
 
 ### Execution :moneybag:
 
-Once the trade signal is sent, the execution class with send the order to Binance.US via ccxt.exchange. For this execution to work, the user will need to verify their identity at CryBot startup.
+Once the trade signal is sent, the execution class will send the order to Binance.US via ccxt.exchange.
 
 Relax, have fun, and don't forget to drink plenty of water! :tada::rocket::full_moon:
