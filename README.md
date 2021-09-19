@@ -47,8 +47,11 @@ We also apply rolling averages, upper/lower Bollinger bands, and binary variable
 
 ### Resources & Repositories Used
 [Part Time Larrys (hackingthemarkets)'s supertrend-crypto-bot](https://github.com/hackingthemarkets/supertrend-crypto-bot)
+
 [Part Time Larrys (hackingthemarkets)'s binance-tutorials](https://github.com/hackingthemarkets/binance-tutorials)
+
 [CCXT - BinanceUS](https://github.com/ccxt/ccxt)
+
 [Binance Full History, 2017 - 2020](https://www.kaggle.com/jorijnsmit/binance-full-history)
 
 ---
