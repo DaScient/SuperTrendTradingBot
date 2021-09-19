@@ -3,6 +3,14 @@
 from random import seed
 from random import randint
 
+BINANCE_KEY=""
+BINANCE_SECRET=""
+
+#Overclocking mitigation.
+
+#Create multiple API Instances and have them random loop through class below.
+#Still needs work.
+
 value = randint(0, 25)
 if value < 5:
     BINANCE_KEY=""

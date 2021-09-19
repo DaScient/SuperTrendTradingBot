@@ -1,4 +1,12 @@
-#Importation
+#Welcome to the SuperTrend Trading Bot Visualizer!
+#Here we can backtest the supertrend forumal over historical timeframes provcided by Binance's Kaggle database.
+#https://www.kaggle.com/jorijnsmit/binance-full-history
+
+from IPython.display import clear_output
+
+#If this is the first run of binance_bot, please uncomment the !pip install command below
+#!pip install -r "requirements.txt"
+
 import ccxt,schedule,warnings,time,ast
 warnings.filterwarnings('ignore')
 import matplotlib.pyplot as plt

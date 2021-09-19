@@ -6,9 +6,11 @@ from random import randint
 BINANCE_KEY=""
 BINANCE_SECRET=""
 
-#Overclocking mitigation
+#Overclocking mitigation.
+
 #Create multiple API Instances and have them random loop through class below.
-#Still needs development.
+#Still needs work.
+
 value = randint(0, 25)
 if value < 5:
     BINANCE_KEY=""

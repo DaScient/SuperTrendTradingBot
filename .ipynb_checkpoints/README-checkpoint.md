@@ -35,6 +35,13 @@ This class will consist of a CCXT connection into Binance.US WebSocket interface
 
 We also apply rolling averages, upper/lower Bollinger bands, and binary variables that evaluates uptrend/downtrend intervals. 
 
+### Resources & Repositories Used
+[Part Time Larrys (hackingthemarkets)'s supertrend-crypto-bot](https://github.com/hackingthemarkets/supertrend-crypto-bot)
+[Part Time Larrys (hackingthemarkets)'s binance-tutorials](https://github.com/hackingthemarkets/binance-tutorials)
+[CCXT - BinanceUS](https://github.com/ccxt/ccxt)
+[Binance Full History, 2017 - 2020](https://www.kaggle.com/jorijnsmit/binance-full-history)
+
+
 ### Trade Strategy :chart_with_upwards_trend:
 
 Like many things in life, sometimes one needs a little variety. There is no shortage of trade strategies to apply to our bot. With this in mind, the strategy class will be designed to be modular.

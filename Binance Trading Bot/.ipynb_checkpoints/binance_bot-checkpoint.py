@@ -1,3 +1,9 @@
+#Welcome to the SuperTrend Trading Bot Code!
+from IPython.display import clear_output
+
+#If this is the first run of binance_bot, please uncomment the !pip install command below
+#!pip install -r "requirements.txt"
+
 import ccxt,schedule,warnings,time,ast,config
 warnings.filterwarnings('ignore')
 from dateutil.tz import tzlocal
@@ -6,6 +12,9 @@ from random import randint
 from random import seed
 import pandas as pd
 import numpy as np
+clear_output()
+
+#Binance.us connection through ccxt
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
 "apiKey": config.BINANCE_KEY,
@@ -45,10 +54,11 @@ def supertrend(df, period=7, atr_multiplier=3):
     return df
 
 #Instance parameters
-name=input("Enter name: ")
+name=input("Your name: ")
 tick=input("Insert ticker: ")
 ticker=tick+"/"+input("USD or USDT?")
-timeframe="5m" #1m,5m,15m,30m,1h,2h,6h,1d
+timeframe="15m" #"15m" work well with a 900-second scheduled.loop
+#Otherwise, use input("Enter desired candlestick intervals: (example: 1m,5m,15m,30m,1h,2h,6h,1d)") for timeframe value.
 order_size = float(input("Order size in "+tick+": "))
 in_position = ast.literal_eval(input("Do not accumulate until next buy signal? - True/False: ").capitalize())
 min_sell_price=float(input("Minimum sell price: "))
@@ -105,7 +115,7 @@ def run_bot():
     print("\nBalance: $",bal*bars[-1][1],", Position:",bal)
     print("Minimum sell price:",min_sell_price,", Order size:",order_size)
     print(name,"'s Markup set to:",markup,"%")
-schedule.every(randint(800,900)).seconds.do(run_bot)
+schedule.every(900).seconds.do(run_bot)
 while True:
     schedule.run_pending()
     time.sleep(1)
