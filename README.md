@@ -15,11 +15,15 @@ The purpose of this repository is to document the development of our very first 
 2. Trade Strategy Class
 3. Execution Class
 
+---
+
 ### What's Needed?
 
 Although our team is working very hard to get the fully user-friendly app developed & deployed, there will still be plenty of time to test the bot on your own as we work through our goals and plans for the future. Feel free to fork, star, and/or watch for any of our updates here on GitHub. 
 
 Here's what you'll currently need in order to execute the bot locally on your machine. (An introductory Python crash course probably wouldn't hurt.) If you do run with it we seek your inputs, suggestions, and ideas that you can prove have a place in our code. Whether it's to help the bot run more efficiently or how we can better scale our project. Your thoughts are welcome! This program is far from perfect, but your support and growing interest we give us the encouragement we need to get this released and trading as smoothly as we possible. Don't hesitate to send us an email if there's anything we can do to help: contact@dascient.com
+
+---
 
 #### Requirements
 1. Python (Latest +3.9.7)
@@ -32,8 +36,11 @@ Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?r
 2. Create an API and follow approval directives.
 3. Save and KEEP ULTRA SAFE your api.key & api.secret (in a config.py, follow format.)
 4. Then go into your terminal 
+ 
  a. Locate binance_bot.py (i.e. >>cd Desktop/GitHub)
  b. Run/execute by typing: >>python binance_bot.py 
+ 
+ ---
 
 ### SuperTrend - Data :computer:
 
@@ -47,11 +54,14 @@ We also apply rolling averages, upper/lower Bollinger bands, and binary variable
 [CCXT - BinanceUS](https://github.com/ccxt/ccxt)
 [Binance Full History, 2017 - 2020](https://www.kaggle.com/jorijnsmit/binance-full-history)
 
+---
 
 ### Trade Strategy :chart_with_upwards_trend:
 
 Like many things in life, sometimes one needs a little variety. There is no shortage of trade strategies to apply to our bot. With this in mind, the strategy class will be designed to be modular.
 That is, it is to be developed with "plug-and-play" design in order to develop different trading strategies over time. As long as the strategy sends a buy/sell signal for the execution, it will function properly.
+
+---
 
 ### Execution :moneybag:
 
