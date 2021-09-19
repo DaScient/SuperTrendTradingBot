@@ -1,11 +1,13 @@
 # SuperTrendTradingBot
 A [DaScient Capital, LP](https://dascientcapital.us) proprietary program &amp; non-ML approach to the application of the SuperTrend indicator designed to execute buy &amp; sell orders to Binance.US using python. 
 
-Our number one mission is to serve the remaining 99.99% of low-income, underprivileged, and misrepresented communities of the world. We wholly believe that through teamwork, technical collaborations, and a bit of computational science we can provide a financial vehicle for the curious individual, tech entrepreneurs, families & family offices, as well as, small & non-profit organizations.
+Our number one mission is to serve the remaining 99.99% of low-income, underprivileged, and misrepresented communities around the world. We wholly believe that through teamwork, technical collaborations, and a bit of computational science we can provide a financial vehicle for aspiring individuals, tech entrepreneurs, families & family offices, as well as, small & non-profit organizations.
+
+Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us.
 
 ---
 
-## Welcome to the Trading Bot - SuperTrend Readme! :robot:
+## The Bot - Our SuperTrend Nutshell :robot:
 
 The purpose of this repository is to document the development of our very first trading bot. The bot will be broken out into 3 broad classes:
 
@@ -17,7 +19,7 @@ The purpose of this repository is to document the development of our very first 
 
 Although our team is working very hard to get the fully user-friendly app developed & deployed, there will still be plenty of time to test the bot on your own as we work through our goals and plans for the future. Feel free to fork, star, and/or watch for any of our updates here on GitHub. 
 
-Here's what you'll currently need in order to execute the bot locally on your machine. (An introductory Python crash course probably wouldn't hurt.) If you do run with it we seek your inputs, suggestions, and ideas that you can prove have a place in our code. Whether it's to help the bot run more efficiently or how we can better scale our project. Your thoughts are welcome! This program is far from perfect, but your support and growing interest we give us the encouragement we need to get this released and trading as smoothly as we possible. Don't hesitate to contact us if there's anything we can do to help: contact@dascient.com
+Here's what you'll currently need in order to execute the bot locally on your machine. (An introductory Python crash course probably wouldn't hurt.) If you do run with it we seek your inputs, suggestions, and ideas that you can prove have a place in our code. Whether it's to help the bot run more efficiently or how we can better scale our project. Your thoughts are welcome! This program is far from perfect, but your support and growing interest we give us the encouragement we need to get this released and trading as smoothly as we possible. Don't hesitate to send us an email if there's anything we can do to help: contact@dascient.com
 
 #### Requirements
 1. Python (Latest +3.9.7)
