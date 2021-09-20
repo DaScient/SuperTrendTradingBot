@@ -1,7 +1,7 @@
 # SuperTrendTradingBot
 A [DaScient Capital, LP](https://dascientcapital.us) proprietary program &amp; non-ML approach to the application of the SuperTrend indicator designed to execute buy &amp; sell orders to Binance.US using python. 
 
-The ultimate mission is to leverage mathematical modeling, data science, business & strategic intelligence, and ml to drive innovation in the realm of our own interests (i.e. we're very normal people. So, we often wonder how could we possibly deliver the best results to people without choking our network or crashing the server? The simple things.)
+Our ultimate mission is to leverage mathematical modeling, data science, business & strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products.
 
 Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us.
 
