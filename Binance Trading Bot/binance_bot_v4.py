@@ -137,7 +137,7 @@ def check_buy_sell_signals(df):
         bar = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)
         price = float(bar[-1][3]) #identifies current low price
         print("Changed to downtrend. Attempting sale.")
-        if in_position and min_sell_price*(1-max_loss)>price>min_sell_price*markup:
+        if in_position and min_sell_price*(1-max_loss)<price:
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
             print('Status:'+order['info']['status'],
                   'Price:'+order['trades'][0]['info']['price'],
