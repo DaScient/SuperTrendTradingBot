@@ -99,8 +99,10 @@ def check_buy_sell_signals(df):
             print("Did not find opportunity to sell, no task.")
 #Execution            
 def run_bot():
-    print(f"\nFetching new bars for {datetime.now(tzlocal()).isoformat()}")
+    print(f"\n{datetime.now(tzlocal()).isoformat()}")
     print("In position:", in_position,";\nTimeframe: ",timeframe,"\n")
+    
+    # pulls in rh ticker data
     df=pd.DataFrame.from_dict(r.crypto.get_crypto_historicals("DOGE", interval='5minute', span='day', bounds='24_7', info=None))
     df['timestamp']=pd.to_datetime(df['begins_at'], format='%Y-%m-%d').dt.tz_localize(None)
     df['open'] = df.apply(lambda x : float(x['open_price']),axis=1)

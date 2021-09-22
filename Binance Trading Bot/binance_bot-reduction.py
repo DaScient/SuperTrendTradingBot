@@ -1,3 +1,6 @@
+####################################################
+# Reduces order_size after every transaction.      #
+####################################################
 import ccxt,schedule,warnings,time,ast,config
 warnings.filterwarnings('ignore')
 from dateutil.tz import tzlocal
@@ -13,10 +16,17 @@ exchange = ccxt.binanceus({
 "secret": config.BINANCE_SECRET,
 'enableRateLimit': True})
 
-# params
+
+name=input("Enter name: ")
 tick=input("Insert ticker: ")
 ticker=tick+"/"+input("USD or USDT? ")
 timeframe = input("Enter desired candlestick intervals, 1m,5m,15m,1h,1d: ")
+order_size = order_size = float(input("Order size in "+tick+": "))
+og_size = order_size
+in_position = ast.literal_eval(input("Aleady in desired holding position? - True/False: ").capitalize())
+min_sell_price=float(input("Minimum sell price: "))
+prev_purch_price=min_sell_price
+max_loss=float(input("Enter percentage of max loss: "+"%"))/100
 volatility=float(input("Volatility rate (example: 0.55555 for short-term volatility, 3 for long-term volatility.): "))
 
 # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
@@ -78,7 +88,7 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
 def check_buy_sell_signals(df):
     
     # Establish bot parameters
-    global ticker,timeframe
+    global in_position,ticker,timeframe,min_sell_price,prev_purch_price,max_loss,order_size
     print("Calculating", ticker ,"data...")
     print(df.tail(3)[['timestamp','close','low','in_uptrend']])
     
@@ -88,20 +98,74 @@ def check_buy_sell_signals(df):
 
     # check for uptrend - if in_uptrend goes from False to True
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
-        
-        # no executions, just signals.
         print("Changed to uptrend - Buy.")
+
+        # enter position when in_uptrend True
+        if not in_position:
+
+            # send binance buy order
+            order = exchange.create_market_buy_order(f'{ticker}', order_size)
+            
+            print('\nStatus:' + order['info']['status'],
+                  'Price:' + order['trades'][0]['info']['price'],
+                  'Quantity:' + order['info']['executedQty'],
+                  'Type:' + order['info']['side'])
+            
+            # holding onto this in order to ensure bot only executes above value(1-max_loss)
+            min_sell_price = float(order['trades'][0]['info']['price'])
+            # i really just did a second one until i can figure out the fetch_order_by_id() fucntion.
+            prev_purch_price = float(order['trades'][0]['info']['price'])
+            
+            # we are now in_position
+            in_position = True
+            print("Purchased @ $",str(prev_purch_price))
+        else:
+            
+            # otherwise 
+            print("Already in trading position.")
+            if prev_purch_price == min_sell_price:
+                pass
+            else:
+                print("Previous purchase price: ", prev_purch_price)
     
     # check for downtrend - if in_uptrend goes from True to False
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
-        
-        # no executions, just signals.
         print("Changed to downtrend - Sell.")
-
+        
+        # current low price = df[-1:].reset_index(drop=True)['low'][0]
+        price = df[-1:].reset_index(drop=True)['low'][0]
+        
+        # only sells if price is greater than (min_sell_price)*(markup)*(max_loss)
+        if in_position and (min_sell_price*(1-max_loss)<price or prev_purch_price<price):
+            
+            # send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+            
+            # i really should just output this as a dataframe()
+            print('Status:' + order['info']['status'],
+                  'Price:' + order['trades'][0]['info']['price'],
+                  'Quantity:' + order['info']['executedQty'],
+                  'Type:' + order['info']['side'])
+            
+            # we are no longer in_position
+            in_position = False
+            
+            # reduces order size to mitigate Insufficient Funds error
+            order_size = order_size*(1-0.10)
+            
+            # limits the size reduction from above
+            if order_size < og_size:
+                order_size = og_size
+            else:
+                pass
+            
+            print("Loss/gain:",str(float(prev_purch_price)/float(order['trades'][0]['info']['price'])-1))
+        else:
+            print("Did not find an opportunity to sell, no task.")  
 
 def run_bot():
     print(datetime.now(tzlocal()).isoformat())
-    print("\tTimeframe:",timeframe,"\n")
+    print("In position:", in_position,"\tTimeframe:",timeframe,"\n")
     
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=50)
@@ -110,6 +174,19 @@ def run_bot():
     
     supertrend_data = supertrend(df)
     check_buy_sell_signals(supertrend_data)
+    
+    # used to get balance of ticker. For future use; allow order_size to be dynamic variable.
+    bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
+    bal['free'] = pd.to_numeric(bal['free'])
+    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop=True)
+    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop=True).free[0]
+
+    # printouts              bars[-1][4] = last inverval's close_price
+    print("\nBalance: $",bal*bars[-1][4],"\tPosition:",bal)
+    print("Minimum sell price:",min_sell_price*(1-max_loss),", Order size:",order_size)
+    print("\tVolatility:",volatility)
+    print("Max loss: ",max_loss,"%")
+
 
 """
 Run Bot, To the Moon
