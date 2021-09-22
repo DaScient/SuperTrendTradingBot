@@ -136,7 +136,7 @@ def check_buy_sell_signals(df):
         price = df[-1:].reset_index(drop=True)['low'][0]
         
         # only sells if price is greater than (min_sell_price)*(markup)*(max_loss)
-        if in_position and (min_sell_price*(1-max_loss)<price or prev_purch_price<price):
+        if in_position and (min_sell_price*(1+max_loss)<price or prev_purch_price<price):
             
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
@@ -183,7 +183,7 @@ def run_bot():
 
     # printouts              bars[-1][4] = last inverval's close_price
     print("\nBalance: $",bal*bars[-1][4],"\tPosition:",bal)
-    print("Minimum sell price:",min_sell_price*(1-max_loss),", Order size:",order_size)
+    print("Minimum sell price:",min_sell_price*(1+max_loss),", Order size:",order_size)
     print("\tVolatility:",volatility)
     print("Max loss: ",max_loss,"%")
 
