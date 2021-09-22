@@ -85,7 +85,7 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
 def check_buy_sell_signals(df):
     
     # Establish bot parameters
-    global in_position,ticker,timeframe,min_sell_price,markup,prev_purch_price,max_loss
+    global in_position,ticker,timeframe,order_size
     print("Calculating", ticker ,"data...")
     print(df.tail(5)[['timestamp','close','low','in_uptrend']])
     
@@ -147,11 +147,11 @@ def check_buy_sell_signals(df):
             print("Did not find an opportunity to sell, no task.")  
 
 def run_bot():
-    print("\n\n",datetime.now(tzlocal()).isoformat())
+    print(datetime.now(tzlocal()).isoformat())
     print("In position:", in_position,"\tTimeframe:",timeframe,"\n")
     
     # pulls in df to be used for calculations
-    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=50)
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=100)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')#.dt.tz_localize(None)
     
