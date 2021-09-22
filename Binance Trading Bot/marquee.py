@@ -80,7 +80,7 @@ def check_buy_sell_signals(df):
     # Establish bot parameters
     global ticker,timeframe
     print("Calculating", ticker ,"data...")
-    print(df.tail(3)[['timestamp','close','low','in_uptrend']])
+    print(df.tail(3)[['timestamp','close','low','volume','in_uptrend']])
     
     # extract last row for df
     last_row_index = len(df.index) - 1
@@ -90,17 +90,21 @@ def check_buy_sell_signals(df):
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         
         # no executions, just signals.
-        print("Changed to uptrend - Buy.")
+        print("\n############################")
+        print("# Changed to uptrend - Buy #")
+        print("############################")
     
     # check for downtrend - if in_uptrend goes from True to False
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
         
         # no executions, just signals.
-        print("Changed to downtrend - Sell.")
+        print("\n###############################")
+        print("# Changed to downtrend - Sell #")
+        print("###############################")
 
-
+# run
 def run_bot():
-    print(datetime.now(tzlocal()).isoformat())
+    print(f"\n{datetime.now(tzlocal()).isoformat()}")
     print("\tTimeframe:",timeframe,"\n")
     
     # pulls in df to be used for calculations
