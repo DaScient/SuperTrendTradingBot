@@ -285,7 +285,8 @@ def check_buy_sell_signals(df):
             else:
                 pass
             
-            print("Loss/gain:",str(float(min_sell_price)/float(order['trades'][0]['info']['price'])-1))
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print("Loss/gain:",str(1-float(min_sell_price)/float(order['trades'][0]['info']['price'])))
         else:
             print("Did not find an opportunity to sell, no task.")  
 
