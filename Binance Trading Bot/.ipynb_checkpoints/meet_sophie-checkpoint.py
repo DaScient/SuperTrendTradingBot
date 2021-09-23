@@ -80,6 +80,7 @@ if q0 == "Yes":
     else:
         volatility = 1.654545454545454545454545454
     time.sleep(1)
+    
     print("\n\n\n.....Awesome! How many "+tick+" would you like me to continuously trade for you?")
     order_size = float(input("\n......Remember, all trades on Binance.US must be above $10: "))
     og_size = order_size
@@ -120,7 +121,7 @@ else:
     
     min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
     max_loss = float(input("\nMax loss (example 0.51): "))/100
-    min_gain = float(input("\nMin gain: (example 1.05)"))/100
+    min_gain = float(input("\nMin gain (example 1.05): "))/100
 
 # let's start!
 if q0 == "Yes":
