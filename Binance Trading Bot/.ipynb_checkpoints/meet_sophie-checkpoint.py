@@ -11,8 +11,8 @@ pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY_v1,
-"secret": config.BINANCE_SECRET_v1,
+"apiKey": config.BINANCE_KEY_v7,
+"secret": config.BINANCE_SECRET_v7,
 'enableRateLimit': True})
 
 # add a little bit of sentience hehehe
@@ -26,21 +26,37 @@ time.sleep(0)
 q0 = input("\n.....Would you like to meet Sohpie before getting started? Yes/No: ").capitalize()
 
 time.sleep(0)
+
+# tradeable-user setting 
+#################################################################
+q1 = input("\n....Would you like Sophie to trade for you? (Yes/No): ").capitalize()
+
+if q1 == "Yes":
+    time.sleep(0)
+    print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
+
+if q1 == "No":
+    time.sleep(0)
+    print(" \n....Great! I'll certainly keep a very close watch on your asset.")
+    print(" \n..")
+    print(" \n.")
+#################################################################
+
 if q0 == "Yes":
     #print("MEET SOPHIE!")
     print("""
- /$$      /$$                       /$$            /$$$$$$                      /$$       /$$           /$$
-| $$$    /$$$                      | $$           /$$__  $$                    | $$      |__/          | $$
-| $$$$  /$$$$  /$$$$$$   /$$$$$$  /$$$$$$        | $$  \__/  /$$$$$$   /$$$$$$ | $$$$$$$  /$$  /$$$$$$ | $$
-| $$ $$/$$ $$ /$$__  $$ /$$__  $$|_  $$_/        |  $$$$$$  /$$__  $$ /$$__  $$| $$__  $$| $$ /$$__  $$| $$
-| $$  $$$| $$| $$$$$$$$| $$$$$$$$  | $$           \____  $$| $$  \ $$| $$  \ $$| $$  \ $$| $$| $$$$$$$$|__/
-| $$\  $ | $$| $$_____/| $$_____/  | $$ /$$       /$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$| $$_____/    
-| $$ \/  | $$|  $$$$$$$|  $$$$$$$  |  $$$$/      |  $$$$$$/|  $$$$$$/| $$$$$$$/| $$  | $$| $$|  $$$$$$$ /$$
-|__/     |__/ \_______/ \_______/   \___/         \______/  \______/ | $$____/ |__/  |__/|__/ \_______/|__/
-                                                                     | $$                                  
-                                                                     | $$                                  
-                                                                     |__/                                  
-""")
+  /$$$$$$                      /$$       /$$          
+/$$__  $$                    | $$      |__/          
+| $$  \__/  /$$$$$$   /$$$$$$ | $$$$$$$  /$$  /$$$$$$ 
+|  $$$$$$  /$$__  $$ /$$__  $$| $$__  $$| $$ /$$__  $$
+\____  $$| $$  \ $$| $$  \ $$| $$  \ $$| $$| $$$$$$$$
+/$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$| $$_____/
+|  $$$$$$/|  $$$$$$/| $$$$$$$/| $$  | $$| $$|  $$$$$$$
+\______/  \______/ | $$____/ |__/  |__/|__/ \_______/
+                | $$                              
+                | $$                              
+                |__/                              
+    """)
     print()
     ###########################################
     # meet sophie
@@ -50,18 +66,6 @@ if q0 == "Yes":
     time.sleep(0)
     print("\n...Before we begin I have a few questions to help us get started.")
     time.sleep(0)
-    q1 = input("\n....Would you like me to do all the trading for you? (Yes/No): ").capitalize()
-    if q1 == "Yes":
-        time.sleep(0)
-        print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
-    if q1 == "No":
-        time.sleep(0)
-        print(" \n....Great! I'll certainly keep a very close watch on your asset.")
-        time.sleep(0)
-        print(" \n...Here are a few more questions for ya... ")
-        print(" \n..")
-        print(" \n.")
-        time.sleep(0)
     ###########################################
 else:
     pass
@@ -111,7 +115,9 @@ if q0 == "Yes":
     
     max_loss = 0.5/100
     min_gain = 0.75/100
-else:
+    
+# still tradeable-user
+elif q1 == "Yes":
     # introduce yourself to bot
     name = input("\nEnter name: ")
     tick = input("\nInsert ticker: ")
@@ -139,9 +145,20 @@ else:
 # let's start!
 if q0 == "Yes":
     print("\n\nOkay! I have everything I need. Now you can just sit back and relax and watch me do what I do, I guess... you'll see my first analysis in",str(timeframe),".")
-else:
+
+elif q1 == "Yes":
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
+    
+elif q1 == "No":
+    timeframe = "5m"
+    name = input("\nEnter name: ")
+    tick = input("\nInsert ticker: ")
+    ticker=  tick+"/"+input("\nEnter the denomination of your trade, i.e. USD, BUSD, or USDT?: ")
+    volatility = 1.3535353535353535353535353535355335353535
+    print("\n\n Great! I'll start analyzing...")
+    print("\tI'll get back to you in",str(timeframe)," with my first results.")
+
 print("\n###########################################################################################")
 time.sleep(2)
 
@@ -155,7 +172,6 @@ print(".......\nBoop Beep Beep!") # bc why tf not?
 
 # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
 # Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
-
 if timeframe == "1m":
     a = 55
     b = 60
@@ -216,22 +232,6 @@ def check_buy_sell_signals(df):
     global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
     print("\nCalculating", ticker , "data...")
     print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
-    
-    time.sleep(0)
-    print("..\nಠ_ಠ Crunch!..Crunch...CRUNCH!  ಠ_ಠ")
-    
-    rando = randint(1,20)
-    if rando < 8:
-        print("\nHaha yay! We're crunching these numbers like they're our little bitch (ᵔᴥᵔ) ")
-        
-    if 9 < rando < 16:
-        time.sleep(0)
-        print("\n...okay! back to work ┌( ಠ_ಠ)┘")
-        time.sleep(0)
-        print("....Beep Boop Boop Beep Boop!")
-        
-    if 17 < rando < 20:
-        print("   | (• ◡•)|   (❍ᴥ❍ʋ)   ")
         
     # extract last row for df
     last_row_index = len(df.index) - 1
@@ -244,7 +244,7 @@ def check_buy_sell_signals(df):
     close_price = df[-1:].reset_index(drop=True)['close'][0]
     
     # tradeable-user
-    if q0 == "Yes":
+    if q1 == "Yes":
         # {start of peak & trough - analysis}
         # i wanted to see if it's possible to catch a massive drop from which to sell
         # so i took the highest low in df & current_low:
@@ -274,7 +274,7 @@ def check_buy_sell_signals(df):
         print("\nChanged to uptrend! | (• ◡•)| We can BUY here.")
         
         # tradeable-user
-        if q0 == "Yes":
+        if q1 == "Yes":
             # enter position when in_uptrend True
             if not in_position:
                 # BUY 
@@ -307,7 +307,7 @@ def check_buy_sell_signals(df):
         print("\nChanged to downtrend... booo! (❍ᴥ❍ʋ) We can SELL here.")
         
         # tradeable-user
-        if q == "Yes":
+        if q1 == "Yes":
             # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) or peak_sell = True
             if in_position and (trough_sell or peak_sell):
 
@@ -366,7 +366,7 @@ def run_bot():
     check_buy_sell_signals(supertrend_data)
     
     # tradeable-user position data
-    if q0 == "Yes":
+    if q1 == "Yes":
         # determined initially by tradeable-user
         print("In position:", in_position, "\nTimeframe:", timeframe,"\n")
 

@@ -11,8 +11,8 @@ pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY,
-"secret": config.BINANCE_SECRET,
+"apiKey": config.BINANCE_KEY_v7,
+"secret": config.BINANCE_SECRET_v7,
 'enableRateLimit': True})
 
 # add a little bit of sentience hehehe
@@ -25,43 +25,47 @@ print("\n....Our very first Sohpisticated trading bot.")
 time.sleep(0)
 q0 = input("\n.....Would you like to meet Sohpie before getting started? Yes/No: ").capitalize()
 
-time.sleep(1)
+time.sleep(0)
+
+# tradeable-user setting 
+#################################################################
+q1 = input("\n....Would you like Sophie to trade for you? (Yes/No): ").capitalize()
+
+if q1 == "Yes":
+    time.sleep(0)
+    print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
+
+if q1 == "No":
+    time.sleep(0)
+    print(" \n....Great! I'll certainly keep a very close watch on your asset.")
+    print(" \n..")
+    print(" \n.")
+#################################################################
+
 if q0 == "Yes":
     #print("MEET SOPHIE!")
     print("""
- /$$      /$$                       /$$            /$$$$$$                      /$$       /$$           /$$
-| $$$    /$$$                      | $$           /$$__  $$                    | $$      |__/          | $$
-| $$$$  /$$$$  /$$$$$$   /$$$$$$  /$$$$$$        | $$  \__/  /$$$$$$   /$$$$$$ | $$$$$$$  /$$  /$$$$$$ | $$
-| $$ $$/$$ $$ /$$__  $$ /$$__  $$|_  $$_/        |  $$$$$$  /$$__  $$ /$$__  $$| $$__  $$| $$ /$$__  $$| $$
-| $$  $$$| $$| $$$$$$$$| $$$$$$$$  | $$           \____  $$| $$  \ $$| $$  \ $$| $$  \ $$| $$| $$$$$$$$|__/
-| $$\  $ | $$| $$_____/| $$_____/  | $$ /$$       /$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$| $$_____/    
-| $$ \/  | $$|  $$$$$$$|  $$$$$$$  |  $$$$/      |  $$$$$$/|  $$$$$$/| $$$$$$$/| $$  | $$| $$|  $$$$$$$ /$$
-|__/     |__/ \_______/ \_______/   \___/         \______/  \______/ | $$____/ |__/  |__/|__/ \_______/|__/
-                                                                     | $$                                  
-                                                                     | $$                                  
-                                                                     |__/                                  
-""")
+  /$$$$$$                      /$$       /$$          
+/$$__  $$                    | $$      |__/          
+| $$  \__/  /$$$$$$   /$$$$$$ | $$$$$$$  /$$  /$$$$$$ 
+|  $$$$$$  /$$__  $$ /$$__  $$| $$__  $$| $$ /$$__  $$
+\____  $$| $$  \ $$| $$  \ $$| $$  \ $$| $$| $$$$$$$$
+/$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$| $$_____/
+|  $$$$$$/|  $$$$$$/| $$$$$$$/| $$  | $$| $$|  $$$$$$$
+\______/  \______/ | $$____/ |__/  |__/|__/ \_______/
+                | $$                              
+                | $$                              
+                |__/                              
+    """)
     print()
     ###########################################
     # meet sophie
     time.sleep(2)
     print("\n.")
     print("\n..Hi there! I'm Sophie, I'll be helping you trade your asset.")
-    time.sleep(1)
+    time.sleep(0)
     print("\n...Before we begin I have a few questions to help us get started.")
-    time.sleep(1)
-    q1 = input("\n....Would you like me to do all the trading for you? (Yes/No): ").capitalize()
-    if q1 == "Yes":
-        time.sleep(1)
-        print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
-    if q1 == "No":
-        time.sleep(1)
-        print(" \n....Great! I'll certainly keep a very close watch on your asset.")
-        time.sleep(1)
-        print(" \n...Here are a few more questions for ya... ")
-        print(" \n..")
-        print(" \n.")
-        time.sleep(1)
+    time.sleep(0)
     ###########################################
 else:
     pass
@@ -69,18 +73,18 @@ else:
 if q0 == "Yes":
     # introduce yourself to sophie
     name = input("\n......What would you like me to call you: ")
-    time.sleep(1)
+    time.sleep(0)
     print("\n.....Oh, what a wonderful name. Well, it's a pleasure doin' business with you",name,"!")
-    time.sleep(1)
+    time.sleep(0)
     print("\n....What is the prefix of the asset you want to trade?")
-    time.sleep(1)
+    time.sleep(0)
     tick = input("\n...Some popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper()
-    time.sleep(1)
+    time.sleep(0)
     print("\n..Nice! That's a great choice.")
-    time.sleep(1)
+    time.sleep(0)
     print("\n\n\n.What denomination do you want to trade",tick,"in?")
     ticker =  tick+"/"+input("\n..Maybe you have tradeable amounts of USD, BUSD, or USDT?: ")
-    time.sleep(1)
+    time.sleep(0)
     print("\n\n\n...This might be a silly question, but how often would you like to check up on this asset?")
     timeframe = input("\n....You can put anything like 1m, 5m, 15m, 30m, 1h, or 1d: ")
     
@@ -92,12 +96,12 @@ if q0 == "Yes":
         
     else:
         volatility = 1.654545454545454545454545454
-    time.sleep(1)
+    time.sleep(0)
     
     print("\n\n\n.....Awesome! How many "+tick+" would you like me to continuously trade for you?")
     order_size = float(input("\n......Remember, all trades on Binance.US must be above $10: "))
     og_size = order_size
-    time.sleep(1)
+    time.sleep(0)
     
     q2 = str(input("\n\n\n.....Are you already holding ~10% more than this amount of "+tick+" in your portfolio? (Yes/No): ")).capitalize()
     if q2 == "Yes":
@@ -107,11 +111,13 @@ if q0 == "Yes":
         in_position = False
         min_sell_price = exchange.fetch_ohlcv('DOGE/USDT', timeframe="1m", limit=1)[0][4]
     
-    time.sleep(1)
+    time.sleep(0)
     
     max_loss = 0.5/100
     min_gain = 0.75/100
-else:
+    
+# still tradeable-user
+elif q1 == "Yes":
     # introduce yourself to bot
     name = input("\nEnter name: ")
     tick = input("\nInsert ticker: ")
@@ -139,23 +145,33 @@ else:
 # let's start!
 if q0 == "Yes":
     print("\n\nOkay! I have everything I need. Now you can just sit back and relax and watch me do what I do, I guess... you'll see my first analysis in",str(timeframe),".")
-else:
+
+elif q1 == "Yes":
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
-print("\n\n###########################################################################################")
+    
+elif q1 == "No":
+    timeframe = "5m"
+    name = input("\nEnter name: ")
+    tick = input("\nInsert ticker: ")
+    ticker=  tick+"/"+input("\nEnter the denomination of your trade, i.e. USD, BUSD, or USDT?: ")
+    volatility = 1.3535353535353535353535353535355335353535
+    print("\n\n Great! I'll start analyzing...")
+    print("\tI'll get back to you in",str(timeframe)," with my first results.")
+
+print("\n###########################################################################################")
 time.sleep(2)
 
 print("\n.......Beep Boop.")
-time.sleep(1)
+time.sleep(0)
 
-print("....Boop Boop.")
-time.sleep(1)
+print("....\nBoop Boop.")
+time.sleep(0)
 
-print(".......Boop Beep Beep!") # bc why tf not?
+print(".......\nBoop Beep Beep!") # bc why tf not?
 
 # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
 # Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
-
 if timeframe == "1m":
     a = 55
     b = 60
@@ -211,22 +227,12 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
 
 # Analysis & decision making. This part could be extracted out into it's own class.
 def check_buy_sell_signals(df):
-    # just for fun
-    rando = randint(1,20)
-    if rando < 8:
-        print("\nHaha yay! We're crunching these numbers like they're our little bitch (ᵔᴥᵔ) ")
-        
-    if 9 < rando < 16:
-        print("Analyzing...")
-        
-    if 17 < rando < 20:
-        print("   | (• ◡•)|   (❍ᴥ❍ʋ)   ")
     
     # Establish bot parameters
     global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
     print("\nCalculating", ticker , "data...")
     print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
-
+        
     # extract last row for df
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
@@ -238,7 +244,7 @@ def check_buy_sell_signals(df):
     close_price = df[-1:].reset_index(drop=True)['close'][0]
     
     # tradeable-user
-    if q0 == "Yes":
+    if q1 == "Yes":
         # {start of peak & trough - analysis}
         # i wanted to see if it's possible to catch a massive drop from which to sell
         # so i took the highest low in df & current_low:
@@ -268,7 +274,7 @@ def check_buy_sell_signals(df):
         print("\nChanged to uptrend! | (• ◡•)| We can BUY here.")
         
         # tradeable-user
-        if q0 == "Yes":
+        if q1 == "Yes":
             # enter position when in_uptrend True
             if not in_position:
                 # BUY 
@@ -301,7 +307,7 @@ def check_buy_sell_signals(df):
         print("\nChanged to downtrend... booo! (❍ᴥ❍ʋ) We can SELL here.")
         
         # tradeable-user
-        if q == "Yes":
+        if q1 == "Yes":
             # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) or peak_sell = True
             if in_position and (trough_sell or peak_sell):
 
@@ -334,7 +340,7 @@ def check_buy_sell_signals(df):
                 if randint(1,30) < 5:
                     print("\nI didn't find this to be an opportunity to sell (☞ﾟヮﾟ)☞ haha yay!")
                 elif randint(1,15) < 4:
-                    print("\n| (• ◡•)| 'Hey Jake! Should we sell here?' (❍ᴥ❍ʋ) \n\t'Yo, Finn! Whattup! No, definitely don't sell anything here yet.")
+                    print("\n| (• ◡•)| 'Hey Jake! Should we sell here?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, definitely don't sell anything here yet.")
                 else:
                     print("No selling opportunity.")
         else:
@@ -360,7 +366,7 @@ def run_bot():
     check_buy_sell_signals(supertrend_data)
     
     # tradeable-user position data
-    if q0 == "Yes":
+    if q1 == "Yes":
         # determined initially by tradeable-user
         print("In position:", in_position, "\nTimeframe:", timeframe,"\n")
 
