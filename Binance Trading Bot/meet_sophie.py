@@ -1,21 +1,24 @@
 import ccxt,schedule,warnings,time,ast,config
 warnings.filterwarnings('ignore')
 from dateutil.tz import tzlocal
+from rich import print, pretty
 from datetime import datetime
 from random import randint
 from random import seed
 import pandas as pd
 import numpy as np
-from rich import print, pretty
+
+# for terminal prettiness
 pretty.install()
 
+# connect to le binance
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY_v4,
-"secret": config.BINANCE_SECRET_v4,
+"apiKey": config.BINANCE_KEY,
+"secret": config.BINANCE_SECRET,
 'enableRateLimit': True})
 
-# let's add a little bit of interaction
+# add a little bit of sentience hehehe
 time.sleep(1)
 print("\n\n...Welcome to Sophie,")
 time.sleep(0)
@@ -24,15 +27,8 @@ time.sleep(0)
 q0 = input("\n.....Would you like to meet Sohpie before getting started? Yes/No: ").capitalize()
 time.sleep(1)
 if q0 == "Yes":
+    print("MEET SOPHIE!")
     print()
-    print("""'##::::'##:'########:'########:'########:::::'######:::'#######::'########::'##::::'##:'####:'########:'####:
- ###::'###: ##.....:: ##.....::... ##..:::::'##... ##:'##.... ##: ##.... ##: ##:::: ##:. ##:: ##.....:: ####:
- ####'####: ##::::::: ##:::::::::: ##::::::: ##:::..:: ##:::: ##: ##:::: ##: ##:::: ##:: ##:: ##::::::: ####:
- ## ### ##: ######::: ######:::::: ##:::::::. ######:: ##:::: ##: ########:: #########:: ##:: ######:::: ##::
- ##. #: ##: ##...:::: ##...::::::: ##::::::::..... ##: ##:::: ##: ##.....::: ##.... ##:: ##:: ##...:::::..:::
- ##:.:: ##: ##::::::: ##:::::::::: ##:::::::'##::: ##: ##:::: ##: ##:::::::: ##:::: ##:: ##:: ##:::::::'####:
- ##:::: ##: ########: ########:::: ##:::::::. ######::. #######:: ##:::::::: ##:::: ##:'####: ########: ####:
-..:::::..::........::........:::::..:::::::::......::::.......:::..:::::::::..:::::..::....::........::....::""")
     ###########################################
     # meet sophie
     time.sleep(1)
@@ -59,21 +55,21 @@ else:
 
 if q0 == "Yes":
     # introduce yourself to sophie
-    name = input("\nWhat would you like me to call you: ")
+    name = input("\n......What would you like me to call you: ")
     time.sleep(1)
-    print("\nOh, what a wonderful name. Well, it's a pleasure doin' business with you",name,"!")
+    print("\n.....Oh, what a wonderful name. Well, it's a pleasure doin' business with you",name,"!")
     time.sleep(1)
-    print("\nWhat is the prefix of the asset you want to trade?")
+    print("\n....What is the prefix of the asset you want to trade?")
     time.sleep(1)
-    tick = input("\nSome popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper()
+    tick = input("\n...Some popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper()
     time.sleep(1)
-    print("\nNice! That's a great choice.")
+    print("\n..Nice! That's a great choice.")
     time.sleep(1)
-    print("\n\n\nWhat denomination do you want to trade",tick,"in?")
-    ticker =  tick+"/"+input("\nMaybe you have tradeable amounts of USD, BUSD, or USDT?: ")
+    print("\n\n\n.What denomination do you want to trade",tick,"in?")
+    ticker =  tick+"/"+input("\n..Maybe you have tradeable amounts of USD, BUSD, or USDT?: ")
     time.sleep(1)
-    print("\n\n\nThis might be a silly question, but how often would you like to check up on this asset?")
-    timeframe = input("\nYou can put anything like 1m, 5m, 15m, 30m, 1h, or 1d: ")
+    print("\n\n\n...This might be a silly question, but how often would you like to check up on this asset?")
+    timeframe = input("\n....You can put anything like 1m, 5m, 15m, 30m, 1h, or 1d: ")
     
     if timeframe == "1m" or "5m":
         volatility = 0.654545454545454545454545454
@@ -84,15 +80,15 @@ if q0 == "Yes":
     else:
         volatility = 1.654545454545454545454545454
     time.sleep(1)
-    print("\n\n\nAwesome! How many "+tick+" would you like me to continuously trade for you?")
-    order_size = float(input("\nRemember, all trades on Binance.US must be above $10: "))
+    print("\n\n\n.....Awesome! How many "+tick+" would you like me to continuously trade for you?")
+    order_size = float(input("\n......Remember, all trades on Binance.US must be above $10: "))
     og_size = order_size
     time.sleep(1)
     
-    q2 = str(input("\n\n\nAre you already holding ~10% more than this amount of "+tick+" in your portfolio?: ")).capitalize()
+    q2 = str(input("\n\n\n.....Are you already holding ~10% more than this amount of "+tick+" in your portfolio?: ")).capitalize()
     if q2 == "Yes":
         in_position = True
-        min_sell_price = float(input("\nWhat was the price of "+tick+" when you bought them?: "))
+        min_sell_price = float(input("\n....What was the price of "+tick+" when you bought them?: "))
     else:
         in_position = False
         min_sell_price = exchange.fetch_ohlcv('DOGE/USDT', timeframe="1m", limit=1)[0][4]
@@ -100,7 +96,7 @@ if q0 == "Yes":
     time.sleep(1)
     
     max_loss = 0.5/100
-    min_gain = 1.05/100
+    min_gain = 0.75/100
 else:
     # introduce yourself to bot
     name = input("\nEnter name: ")
@@ -130,8 +126,15 @@ else:
 if q0 == "Yes":
     print("\n\nOkay! I have everything I need. Now you can just sit back and relax and watch me do what I do, I guess... you'll see my first analysis in",str(timeframe),".")
 else:
-    print("\n\n Great! I'll start analyzing incoming data in",str(timeframe),".")
-print("\n#########################################################################################################")
+    print("\n\n Great! I'll start analyzing...")
+    print("\tI'll get back to you in",str(timeframe)," with my first results.")
+print("\n###########################################################################################")
+time.sleep(2)
+print(".......Beep Boop.")
+time.sleep(1)
+print("....Boop Boop.")
+time.sleep(1)
+print(".......Boop Beep Beep!")
 # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
 #Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
 if timeframe == "1m":
@@ -191,34 +194,33 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
 def check_buy_sell_signals(df):
     
     # Establish bot parameters
-    global in_position,ticker,timeframe,min_sell_price,max_loss,min_gain,order_size
-    print("Calculating", ticker ,"data...")
-    print(df.tail(3)[['timestamp','close','low','in_uptrend']])
+    global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
+    print("Calculating", ticker , "data...")
+    print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
     
     # {start of peak & trough - analysis}
-    # most current open, high, & low prices
+    # most ohlc
     open_price = df[-1:].reset_index(drop=True)['open'][0]
     high_price = df[-1:].reset_index(drop=True)['high'][0]
     low_price = df[-1:].reset_index(drop=True)['low'][0]
+    close_price = df[-1:].reset_index(drop=True)['close'][0]
 
     # i wanted to see if it's possible to catch a massive drop from which to sell
     # so i took the highest low in df & current_low:
     max_low = df.max()['low'] * (1 - max_loss)
-    #or if 
-    #max_low = min_sell_price * (1-max_loss)
 
     # a sell point from peak could be discovered when low price goes farther than recent max_low(1 - max_loss): 
     peak_sell = low_price < max_low
     
-    print("\nLow price: ", str(low_price)," Max low: ", str(max_low))
-    print("Peak breached: ", str(peak_sell))
+    print("\nLow price: ", str(low_price), "\tMax low: ", str(max_low))
+    print("Close price: ", str(close_price), "\tPeak breached: ", str(peak_sell))
     
     # a sell point from trough could be discovered when low price goes above min_sell_price(1 + min_gain): 
     trough_sell = min_sell_price * (1 + min_gain) < low_price
-    print("\nMinimum sell price:", min_sell_price * (1 + min_gain))
+    print("\nMinimum sell price:", str(min_sell_price * (1 + min_gain)))
     
     # check if min_sell_price < low_price - which would thus execute a sell
-    print("Trough breached: ",trough_sell)
+    print("High price", str(high_price), "\tTrough breached: ",trough_sell)
     # {end of peak & trough - analysis}
     
     # extract last row for df
@@ -227,7 +229,7 @@ def check_buy_sell_signals(df):
 
     # check for uptrend - if in_uptrend goes from False to True
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
-        print("\n\nChanged to uptrend - Buy.")
+        print("\nChanged to uptrend - Buy.")
 
         # enter position when in_uptrend True
         if not in_position:
@@ -235,10 +237,11 @@ def check_buy_sell_signals(df):
             # send binance buy order
             order = exchange.create_market_buy_order(f'{ticker}', order_size)
             
+            # i really should just output this as a dataframe()
             print('\nStatus:' + order['info']['status'],
-                  'Price:' + order['trades'][0]['info']['price'],
-                  'Quantity:' + order['info']['executedQty'],
-                  'Type:' + order['info']['side'])
+                  '\nPrice:' + order['trades'][0]['info']['price'],
+                  '\nQuantity:' + order['info']['executedQty'],
+                  '\nType:' + order['info']['side'])
             
             # just catching how many i caught
             quant = float(order['info']['executedQty'])
@@ -256,7 +259,7 @@ def check_buy_sell_signals(df):
     
     # check for downtrend - if in_uptrend goes from True to False
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
-        print("Changed to downtrend - Sell.")
+        print("\nChanged to downtrend - Sell.")
         
         # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) or peak_sell = True
         if in_position and (trough_sell or peak_sell):
@@ -264,20 +267,19 @@ def check_buy_sell_signals(df):
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
             
-            # i really should just output this as a dataframe()
-            print('Status:' + order['info']['status'],
-                  'Price:' + order['trades'][0]['info']['price'],
-                  'Quantity:' + order['info']['executedQty'],
-                  'Type:' + order['info']['side'])
+            print('\nStatus:' + order['info']['status'],
+                  '\nPrice:' + order['trades'][0]['info']['price'],
+                  '\nQuantity:' + order['info']['executedQty'],
+                  '\nType:' + order['info']['side'])
             
             # we are no longer in_position
             in_position = False
             
             # reduces order size to mitigate Insufficient Funds error
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(1-0.0)
             
             # limits the size reduction from above
-            if order_size < og_size:
+            if order_size < og_size * 0.85:
                 order_size = og_size
             else:
                 pass
@@ -297,7 +299,7 @@ def run_bot():
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=50)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(None)
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz="America/Los_Angeles")
     
     supertrend_data = supertrend(df)
     check_buy_sell_signals(supertrend_data)
@@ -310,8 +312,8 @@ def run_bot():
 
     # printouts 
     print("\nBalance:$", bal*bars[-1][1], "\tPosition:", bal)
-    print("Order size:", order_size)
-    print("Volatility:", volatility, "Max loss:", max_loss)
+    print("Order size:", str(order_size), "\t\tVolatility:", str(volatility))
+    print("Min gain", str(min_gain), "\t\tMax loss:", str(max_loss))
 
 """
 Run Bot, To the Moon
