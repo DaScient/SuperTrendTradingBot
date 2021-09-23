@@ -3,6 +3,8 @@
 from random import seed
 from random import randint
 
+random.seed(10)
+
 BINANCE_KEY=""
 BINANCE_SECRET=""
 
