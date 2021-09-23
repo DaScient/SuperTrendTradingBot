@@ -11,8 +11,8 @@ pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY_v1,
-"secret": config.BINANCE_SECRET_v1,
+"apiKey": config.BINANCE_KEY,
+"secret": config.BINANCE_SECRET,
 'enableRateLimit': True})
 
 # add a little bit of sentience hehehe
@@ -25,7 +25,7 @@ print("\n....Our very first Sohpisticated trading bot.")
 time.sleep(0)
 q0 = input("\n.....Would you like to meet Sohpie before getting started? Yes/No: ").capitalize()
 
-time.sleep(0)
+time.sleep(1)
 if q0 == "Yes":
     #print("MEET SOPHIE!")
     print("""
@@ -47,21 +47,21 @@ if q0 == "Yes":
     time.sleep(2)
     print("\n.")
     print("\n..Hi there! I'm Sophie, I'll be helping you trade your asset.")
-    time.sleep(0)
+    time.sleep(1)
     print("\n...Before we begin I have a few questions to help us get started.")
-    time.sleep(0)
+    time.sleep(1)
     q1 = input("\n....Would you like me to do all the trading for you? (Yes/No): ").capitalize()
     if q1 == "Yes":
-        time.sleep(0)
+        time.sleep(1)
         print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
     if q1 == "No":
-        time.sleep(0)
+        time.sleep(1)
         print(" \n....Great! I'll certainly keep a very close watch on your asset.")
-        time.sleep(0)
+        time.sleep(1)
         print(" \n...Here are a few more questions for ya... ")
         print(" \n..")
         print(" \n.")
-        time.sleep(0)
+        time.sleep(1)
     ###########################################
 else:
     pass
@@ -69,18 +69,18 @@ else:
 if q0 == "Yes":
     # introduce yourself to sophie
     name = input("\n......What would you like me to call you: ")
-    time.sleep(0)
+    time.sleep(1)
     print("\n.....Oh, what a wonderful name. Well, it's a pleasure doin' business with you",name,"!")
-    time.sleep(0)
+    time.sleep(1)
     print("\n....What is the prefix of the asset you want to trade?")
-    time.sleep(0)
+    time.sleep(1)
     tick = input("\n...Some popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper()
-    time.sleep(0)
+    time.sleep(1)
     print("\n..Nice! That's a great choice.")
-    time.sleep(0)
+    time.sleep(1)
     print("\n\n\n.What denomination do you want to trade",tick,"in?")
     ticker =  tick+"/"+input("\n..Maybe you have tradeable amounts of USD, BUSD, or USDT?: ")
-    time.sleep(0)
+    time.sleep(1)
     print("\n\n\n...This might be a silly question, but how often would you like to check up on this asset?")
     timeframe = input("\n....You can put anything like 1m, 5m, 15m, 30m, 1h, or 1d: ")
     
@@ -92,12 +92,12 @@ if q0 == "Yes":
         
     else:
         volatility = 1.654545454545454545454545454
-    time.sleep(0)
+    time.sleep(1)
     
     print("\n\n\n.....Awesome! How many "+tick+" would you like me to continuously trade for you?")
     order_size = float(input("\n......Remember, all trades on Binance.US must be above $10: "))
     og_size = order_size
-    time.sleep(0)
+    time.sleep(1)
     
     q2 = str(input("\n\n\n.....Are you already holding ~10% more than this amount of "+tick+" in your portfolio? (Yes/No): ")).capitalize()
     if q2 == "Yes":
@@ -107,7 +107,7 @@ if q0 == "Yes":
         in_position = False
         min_sell_price = exchange.fetch_ohlcv('DOGE/USDT', timeframe="1m", limit=1)[0][4]
     
-    time.sleep(0)
+    time.sleep(1)
     
     max_loss = 0.5/100
     min_gain = 0.75/100
@@ -142,16 +142,16 @@ if q0 == "Yes":
 else:
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
-print("\n###########################################################################################")
+print("\n\n###########################################################################################")
 time.sleep(2)
 
 print("\n.......Beep Boop.")
-time.sleep(0)
+time.sleep(1)
 
-print("....\nBoop Boop.")
-time.sleep(0)
+print("....Boop Boop.")
+time.sleep(1)
 
-print(".......\nBoop Beep Beep!") # bc why tf not?
+print(".......Boop Beep Beep!") # bc why tf not?
 
 # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
 # Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
@@ -211,28 +211,22 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
 
 # Analysis & decision making. This part could be extracted out into it's own class.
 def check_buy_sell_signals(df):
-    
-    # Establish bot parameters
-    global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
-    print("\nCalculating", ticker , "data...")
-    print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
-    
-    time.sleep(0)
-    print("..\nಠ_ಠ Crunch!..Crunch...CRUNCH!  ಠ_ಠ")
-    
+    # just for fun
     rando = randint(1,20)
     if rando < 8:
         print("\nHaha yay! We're crunching these numbers like they're our little bitch (ᵔᴥᵔ) ")
         
     if 9 < rando < 16:
-        time.sleep(0)
-        print("\n...okay! back to work ┌( ಠ_ಠ)┘")
-        time.sleep(0)
-        print("....Beep Boop Boop Beep Boop!")
+        print("Analyzing...")
         
     if 17 < rando < 20:
         print("   | (• ◡•)|   (❍ᴥ❍ʋ)   ")
-        
+    
+    # Establish bot parameters
+    global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
+    print("\nCalculating", ticker , "data...")
+    print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
+
     # extract last row for df
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
@@ -340,7 +334,7 @@ def check_buy_sell_signals(df):
                 if randint(1,30) < 5:
                     print("\nI didn't find this to be an opportunity to sell (☞ﾟヮﾟ)☞ haha yay!")
                 elif randint(1,15) < 4:
-                    print("\n| (• ◡•)| 'Hey Jake! Should we sell here?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, definitely don't sell anything here yet.")
+                    print("\n| (• ◡•)| 'Hey Jake! Should we sell here?' (❍ᴥ❍ʋ) \n\t'Yo, Finn! Whattup! No, definitely don't sell anything here yet.")
                 else:
                     print("No selling opportunity.")
         else:
