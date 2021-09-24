@@ -9,28 +9,29 @@ import numpy as np
 from rich import print, pretty
 pretty.install()
 
+# {binanceus logon}
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
-
 # {random key generator}
 # for reference see config.py
 value = randint(0,100)
 if 0 < value < 25:
-    key = config.BINANCE_KEY_v7
-    secret = config.BINANCE_SECRET_v7
+    key = config.BINANCE_KEY_v1
+    secret = config.BINANCE_SECRET_v1
 
 if 26 < value < 50:
-    key = config.BINANCE_KEY_v6
-    secret = config.BINANCE_SECRET_v6
+    key = config.BINANCE_KEY_v2
+    secret = config.BINANCE_SECRET_v2
 
 if 51 < value < 75:
-    key = config.BINANCE_KEY_v5
-    secret = config.BINANCE_SECRET_v5
+    key = config.BINANCE_KEY_v3
+    secret = config.BINANCE_SECRET_v3
 
 if 76 < value < 100:
     key = config.BINANCE_KEY_v4
     secret = config.BINANCE_SECRET_v4
 
 exchange = ccxt.binanceus({"apiKey": key, "secret": secret, "enableRateLimit": True})
+# {binance logon complete}
 
 # add a little bit of sentience hehehe
 time.sleep(1)
@@ -371,7 +372,7 @@ def check_buy_sell_signals(df):
                 # SELL
                 # send binance sell order
                 order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
+                print("\n Unless... it's actually a volitile mini-peakage. Oh! no | (• ◡•)|\n ......... Let's catch the next uphill.")
                 print('\nStatus:' + order['info']['status'],
                       '\nPrice:' + order['trades'][0]['info']['price'],
                       '\nQuantity:' + order['info']['executedQty'],
@@ -396,7 +397,7 @@ def check_buy_sell_signals(df):
     
     # check for downtrend - if in_uptrend goes from True to False
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
-        print("\nChanged to downtrend... booo! (❍ᴥ❍ʋ) We can SELL here.")
+        print("\nChanged to downtrend... booo! (❍ᴥ❍ʋ) We should dip sauce! There's no math here!")
         
         # tradeable-user
         if q1 == "Yes":
@@ -434,7 +435,7 @@ def check_buy_sell_signals(df):
                 elif randint(1,15) < 4:
                     print("\n| (• ◡•)| 'Hey Jake! Is this mathematical?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, don't you even think about it!")
                 else:
-                    print("Nothing to sell here folks! (☞ﾟヮﾟ)☞ ")
+                    print("\nNothing to sell here folks! (☞ﾟヮﾟ)☞ ")
         else:
             pass
 
