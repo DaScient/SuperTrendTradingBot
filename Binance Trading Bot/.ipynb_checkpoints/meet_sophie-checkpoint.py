@@ -11,8 +11,8 @@ pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY_v7,
-"secret": config.BINANCE_SECRET_v7,
+"apiKey": config.BINANCE_KEY,
+"secret": config.BINANCE_SECRET,
 'enableRateLimit': True})
 
 # add a little bit of sentience hehehe
@@ -52,10 +52,10 @@ if q0 == "Yes":
 \____  $$| $$  \ $$| $$  \ $$| $$  \ $$| $$| $$$$$$$$
 /$$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$| $$_____/
 |  $$$$$$/|  $$$$$$/| $$$$$$$/| $$  | $$| $$|  $$$$$$$
-\______/  \______/ | $$____/ |__/  |__/|__/ \_______/
-                | $$                              
-                | $$                              
-                |__/                              
+\______/  \______/  | $$____/ |__/  |__/|__/ \_______/
+                    | $$                              
+                    | $$                              
+                    |__/                              
     """)
     print()
     ###########################################
@@ -116,7 +116,7 @@ if q0 == "Yes":
     max_loss = 0.5/100
     min_gain = 0.75/100
     
-# still tradeable-user
+# tradeable-user
 elif q1 == "Yes":
     # introduce yourself to bot
     name = input("\nEnter name: ")
@@ -149,13 +149,15 @@ if q0 == "Yes":
 elif q1 == "Yes":
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
-    
+
+# non-tradeable user
 elif q1 == "No":
-    timeframe = "5m"
+    timeframe = input("Choose between - 1m, 5m, 15m, 30m, 1h, 1d: ")
     name = input("\nEnter name: ")
     tick = input("\nInsert ticker: ")
     ticker=  tick+"/"+input("\nEnter the denomination of your trade, i.e. USD, BUSD, or USDT?: ")
     volatility = 1.3535353535353535353535353535355335353535
+    time.sleep(0)
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
 
@@ -264,9 +266,12 @@ def check_buy_sell_signals(df):
 
         print("\nMinimum sell price:", str(min_sell_price))
         # {end of peak & trough - analysis}
-    else:
-        pass
-
+    
+    # non-tradeable users
+    elif q1 == "No":
+        print("Open: ", open_price, "\tHigh:", high_price)
+        print("Low: ", low_price, "Close: ", close_price)
+        
     # check for uptrend - if in_uptrend goes from False to True
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         
