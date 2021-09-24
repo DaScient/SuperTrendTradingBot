@@ -11,19 +11,19 @@ pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY,
-"secret": config.BINANCE_SECRET,
+"apiKey": config.BINANCE_KEY_v6,
+"secret": config.BINANCE_SECRET_v6,
 'enableRateLimit': True})
 
 # add a little bit of sentience hehehe
 time.sleep(1)
-print("\n\n...Welcome to Sophie,")
+print("\n\n...Say hi to Sophie,")
 
 time.sleep(0)
 print("\n....Our very first Sohpisticated trading bot.")
 
 time.sleep(0)
-q0 = input("\n.....Would you like to meet Sohpie before getting started? Yes/No: ").capitalize()
+q0 = input("\n.....Would you like to meet Sohpie before getting started? (Yes/No): ").capitalize()
 
 time.sleep(0)
 
@@ -68,12 +68,11 @@ if q0 == "Yes":
                                                   | $$                                  
                                                   |__/                                  
     """)
-    print()
     ###########################################
     # meet sophie
     time.sleep(2)
-    print("\n.")
-    print("\n..Hi there! I'm Sophie, I'll be helping you trade your asset.")
+    print(".")
+    print("\n..I'll be helping you trade your asset.")
     time.sleep(0)
     print("\n...Before we begin I have a few questions to help us get started.")
     time.sleep(0)
@@ -178,7 +177,7 @@ time.sleep(2)
 print("\n.......Beep Boop.")
 time.sleep(0)
 
-print("....\nBoop Boop.")
+print("....\nBoop Beep Boop. Boop Beep.")
 time.sleep(0)
 
 print(".......\nBoop Beep Beep!") # bc why tf not?
@@ -281,7 +280,7 @@ def check_buy_sell_signals(df):
     # non-tradeable users
     elif q1 == "No":
         print("Open: ", open_price, "\tHigh:", high_price)
-        print("Low: ", low_price, "Close: ", close_price)
+        print("Low: ", low_price, "\tClose: ", close_price)
         
     # check for uptrend - if in_uptrend goes from False to True
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
