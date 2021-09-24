@@ -10,24 +10,53 @@ from rich import print, pretty
 pretty.install()
 
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
-exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY,
-"secret": config.BINANCE_SECRET,
-'enableRateLimit': True})
+
+# {random key generator}
+# for reference see config.py
+value = randint(0,100)
+if 0 < value < 25:
+    key = config.BINANCE_KEY_v7
+    secret = config.BINANCE_SECRET_v7
+
+if 26 < value < 50:
+    key = config.BINANCE_KEY_v6
+    secret = config.BINANCE_SECRET_v6
+
+if 51 < value < 75:
+    key = config.BINANCE_KEY_v5
+    secret = config.BINANCE_SECRET_v5
+
+if 76 < value < 100:
+    key = config.BINANCE_KEY_v4
+    secret = config.BINANCE_SECRET_v4
+
+exchange = ccxt.binanceus({"apiKey": key, "secret": secret, "enableRateLimit": True})
 
 # add a little bit of sentience hehehe
 time.sleep(1)
 print("\n\n.Say hi to Sophie,")
 
 time.sleep(0)
-print("\n..Our very first sohpisticated trading bot.")
+print("\n..Your very first sohpisticated trading bot.")
 
 time.sleep(1)
-q0 = input("\n...Would you like to meet Sohpie before getting started? (Yes/No): ").capitalize()
+q0 = input("\n...Would you like to meet with Sohpie before getting started? (Yes/No): ").capitalize()
 
 time.sleep(0)
 
 # tradeable-user setting 
+#################################################################
+q1 = input("\n....Would you like Sophie to trade for you? (Yes/No): ").capitalize()
+
+if q1 == "Yes":
+    time.sleep(0)
+    print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
+
+if q1 == "No":
+    time.sleep(0)
+    print(" \n...Great, I'd love a good company like you to join me!")
+    print(" \n..Let's keep our eyes on the market.")
+    print(" \n.I'll tell you what I find.")
 #################################################################
 
 if q0 == "Yes":
@@ -249,7 +278,9 @@ def check_buy_sell_signals(df):
     
     # tradeable-user
     if q1 == "Yes":
+        
         # {start of peak & trough - analysis}
+        
         # i wanted to see if it's possible to catch a massive drop from which to sell
         # so i took the highest low in df & current_low:
         #max_low = df.max()['low'] * (1 - max_loss)
@@ -275,15 +306,18 @@ def check_buy_sell_signals(df):
         # another sell variable can be discovered if trent in 1m timeframe changes
         
         # i wanted to create a separate frame of reference from a very volatile 1m timeframe
-        # this might be able to quickly calculate a downtrend during a peak_sell event.
-        
-        bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=10)
+        # this might be able to quickly calculate a downtrend during a peak_sell event (okay, well maybe not so "quickly")
+        bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
         df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")
-        # brielfy calculates most recent 1-minute trend
-        # used to decide volatility_sell
+        df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(None)#tz = "America/Los_Angeles")
+        
+        # calculates most recent 1-minute trend
+        # used to decide "volatility_sell"
         df_2 = supertrend(df_2)
 
+        # this could have also been written
+        # volatile = df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0] 
+        # & just call if ~volatile and ()
         volatile = df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0] == False
         
         # will only trigger if th following is met
@@ -293,6 +327,7 @@ def check_buy_sell_signals(df):
             volatility_sell = False
         
         print("\n1-minute volatility (will trigger sell): ",volatility_sell,"\n")
+        
         ## {end of real-time trend/volatility analysis} ##
     
     # non-tradeable users
@@ -304,7 +339,7 @@ def check_buy_sell_signals(df):
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         
         # all-user print out
-        print("\nChanged to uptrend! | (• ◡•)| We can BUY here.")
+        print("\nChanged to uptrend! | (• ◡•)| Mathematical!")
         
         # tradeable-user
         if q1 == "Yes":
@@ -397,9 +432,9 @@ def check_buy_sell_signals(df):
                 if randint(1,30) < 5:
                     print("\nI didn't find this to be an opportunity to sell (☞ﾟヮﾟ)☞ haha yay!")
                 elif randint(1,15) < 4:
-                    print("\n| (• ◡•)| 'Hey Jake! Should we sell here?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, definitely don't sell anything here yet.")
+                    print("\n| (• ◡•)| 'Hey Jake! Is this mathematical?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, don't you even think about it!")
                 else:
-                    print("No selling opportunity.")
+                    print("Nothing to sell here folks! (☞ﾟヮﾟ)☞ ")
         else:
             pass
 
@@ -414,9 +449,9 @@ def run_bot():
     print("\nGenerating market indications for ",name)
     
     # pulls in df to be used for calculations
-    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=35)
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=42)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(None)#tz = "America/Los_Angeles")
         
     # application of supertrend formula
     print("\nApplying supertrend formula... ")
