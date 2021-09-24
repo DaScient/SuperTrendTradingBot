@@ -1,3 +1,9 @@
+# first run to install dependencies
+from IPython.display import clear_output
+!pip install -r requirements.txt
+clear_output()
+
+# sophie's insides...
 import ccxt,schedule,warnings,time,ast,config
 warnings.filterwarnings('ignore')
 from dateutil.tz import tzlocal
@@ -73,7 +79,7 @@ if q0 == "Yes":
     # meet sophie
     time.sleep(2)
     print("\n.")
-    print("\n..Hi there! I'm Sophie, I'll be helping you trade your asset.")
+    print("\n..I'll be helping you trade your asset.")
     time.sleep(0)
     print("\n...Before we begin I have a few questions to help us get started.")
     time.sleep(0)
@@ -172,7 +178,7 @@ elif q1 == "No":
     print("\n\n Great! I'll start analyzing...")
     print("\tI'll get back to you in",str(timeframe)," with my first results.")
 
-print("\n#####  ┌( ಠ_ಠ)┘  #####")
+print("\n###########################################################################################")
 time.sleep(2)
 
 print("\n.......Beep Boop.")
@@ -365,7 +371,7 @@ def check_buy_sell_signals(df):
 # do it... just do it
 def run_bot():
     print()
-    print("#####  ┌( ಠ_ಠ)┘  #####")
+    print("##################  ┌( ಠ_ಠ)┘  ######################")
     print()
     print(datetime.now(tzlocal()).isoformat())
     
