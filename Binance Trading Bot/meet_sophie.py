@@ -118,6 +118,7 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
 else:
     pass
 
+# {begin sophie introduction}
 if q0 == ("Y" or "y" or "Yes" or "yes"):
     
     print("\n....What is the prefix of the asset you want to trade?")
@@ -165,9 +166,15 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
     # set max_min for 
     max_loss = 0.05/100
     min_gain = 1.05/100
-    
-# tradeable-user
-elif q1 == ("Y" or "y" or "Yes" or "yes"):
+
+    # let's start w/ sophie!
+    time.sleep(2)
+    print(f"\n\nOkay! I have everything I need. \nI'll be back in {timeframe} to show what I've got.")
+
+# {end sophie introduction}
+
+# {begin params for tradeable-user}
+if q1 == ("Y" or "y" or "Yes" or "yes"):
     time.sleep(1)
     # introduce yourself to bot
 
@@ -201,22 +208,18 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
         min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
     max_loss = 0.51/100
     min_gain = 1.05/100
-
-# let's start!
-if q0 == ("Y" or "y" or "Yes" or "yes"):
-    time.sleep(2)
-    print(f"\n\nOkay! I have everything I need. \nI'll be back in {timeframe} to show what I've got.")
-
-elif q1 == ("Y" or "y" or "Yes" or "yes"):
+    
     time.sleep(1)
     print("\n\n Great! I'll get to work...")
     print(f"\tI'll be back in {timeframe} with my first results.")
+# {end params for tradeable-user}
 
-# non-tradeable user
+# {begin params for non-tradeable-user}
 elif q1 == ("N" or "n" or "No" or "no"):
     timeframe = input("Choose between - 1m, 5m, 15m, 30m, 1h, 1d: ")
     tick = input("\nInsert ticker: ").upper().replace(' ','')
     ticker=  tick+"/"+input("\nEnter the denomination of your trade,\n      some of the options are USD, BUSD, or USDT?: ").upper().replace(' ','')
+
     
     # considerations for atr_multiplier
     if timeframe == "1m" or "5m":
@@ -242,6 +245,8 @@ elif q1 == ("N" or "n" or "No" or "no"):
         print(f"\tHey {name}, what is a heart anyway?")
         time.sleep(2)
         print("\nBoof! sorry, I got sidetracked... Okay, boss! I'll be right back.")
+
+# {end params for non-tradeable-user}
         
 print("\n##~##  ┌( ಠ_ಠ)┘  ##~##")
 time.sleep(2)
