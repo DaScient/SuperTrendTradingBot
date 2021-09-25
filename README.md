@@ -26,8 +26,8 @@ Here's what you'll currently need in order to execute the bot locally on your ma
 ---
 
 #### Requirements
-1. Python (Latest +3.9.7)
-2. Jupyter Notebook - Anaconda (mini-conda will certainly suffice)
+1. [Python (Latest +3.9.7)](https://www.python.org/ftp/python/3.9.7/python-3.9.7-macosx10.9.pkg)
+2. Jupyter Notebook - Anaconda ([mini-conda will certainly suffice](https://docs.conda.io/en/latest/miniconda.html))
 3. Binance.US crypto brokerage account. (API_KEY, API_SECRET) 
 4. Lastly, you'll need this repository cloned somewhere easy to find. (i.e ./Desktop/GitHub will work just fine.)
 
