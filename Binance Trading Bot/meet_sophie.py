@@ -55,7 +55,7 @@ time.sleep(1)
 print("\n\n.Say hi to Sophie,")
 
 time.sleep(0)
-print("\n..Your very first sohpisticated trading bot.")
+print("\n..Your very first sophisticated trading bot.")
 
 time.sleep(1)
 q0 = input("\n...Would you like to meet with Sohpie before getting started? (Yes/No): ").capitalize()
@@ -485,10 +485,10 @@ def check_buy_sell_signals(df):
                 in_position = False
 
                 # reduces order size to mitigate Insufficient Funds error
-                order_size = order_size*(1-0.1)
+                order_size = order_size*(1-0.05)
 
                 # limits the size reduction from above
-                if order_size < og_size * 0.95:
+                if order_size < og_size * 0.85:
                     order_size = og_size
                 else:
                     pass
