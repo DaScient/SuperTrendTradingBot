@@ -52,35 +52,13 @@ exchange = ccxt.binanceus({"apiKey": key, "secret": secret, "enableRateLimit": T
 
 # introduce yourself
 name = input("\nPlease enter your name: ")
-
-# add a little bit of sentience hehehe
+""
 time.sleep(1)
-print(f"\n\n.Welcome {name}, meet Sophie.")
-
-time.sleep(0)
-print("\n..Your very first sophisticated trading bot.")
-
-time.sleep(1)
-q0 = input("\n...If you plan on trading, would you like to meet with Sohpie before getting started? (Yes/No): ").capitalize()
-
+q0 = input(f"\n...Hi {name}! Would you like to have Sophie automate your trades? (Yes/No): ").capitalize()
 time.sleep(0)
 
-# tradeable-user setting
-q1 = input("\n....Would you like Sophie to trade for you? (Yes/No): ").capitalize()
-
-if q1 == ("Y" or "y" or "Yes" or "yes"):
-    time.sleep(0)
-    print(" \n.....Awesome! I'm sure you'll be happy with my performance.")
-
-if q1 == ("N" or "n" or "No" or "no"):
-    time.sleep(0)
-    print(" \n...Great, I'd love a good company like you to join me!")
-    print(" \n..Let's keep our eyes on the market.")
-    print(" \n.I'll tell you what I find.")
-
-# {begin sophie introduction}
 if q0 == ("Y" or "y" or "Yes" or "yes"):
-    #print("MEET SOPHIE!")
+    time.sleep(0)
     print("""
     
  /$$   /$$ /$$         /$$     /$$                                     /$$              
@@ -154,8 +132,7 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
     elif q2 == ("N" or "n" or "No" or "no"):
         in_position = False
         min_sell_price = exchange.fetch_ohlcv(f"{ticker}", timeframe="1m", limit=1)[0][4]
-    
-    # set max_min for 
+
     max_loss = 0.05/100
     min_gain = 1.05/100
 
@@ -163,91 +140,35 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
     time.sleep(2)
     print(f"\n\nOkay! I have everything I need. \nI'll be back in {timeframe} to show what I've got.")
 
-else:
-    pass
-# {end sophie introduction}
-
-# {begin params for other tradeable-user}
-if q1 == ("Y" or "y" or "Yes" or "yes"):
-    time.sleep(1)
-    # introduce yourself to bot
-
-    tick = input("\nInsert a ticker: ").upper().replace(' ','')
-    ticker=  tick+"/"+input("\nEnter the denomination you want to trade, i.e. USD, BUSD, or USDT?: ").upper().replace(' ','')
-    timeframe = input("\nYou can put anything in (1m, 5m, 15m, 30m, 1h, or 1d): ").capitalize().replace(' ','')
-    
-    # presets for volatility
-    if timeframe == "1m" or "5m":
-        volatility = 0.6545454
-        
-    elif timeframe == "15m" or "30m":
-        volatility = 1.3545454
-        
-    elif timeframe == "1h" or "1d":
-        volatility = 1.6545454
-    
-    else:
-        print("I don't recognize that response. Start again.")
-    
-    order_size = float(input(f"\nOrder size in {tick}: "))
-    og_size = order_size
-    
-    # just a little redundance here, will fix later
-    answer = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
-    
-    if answer == "Y" or "Yes" or "T" or "True":
-        in_position = True
-        min_sell_price = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)[0][4]
-    
-    elif asnwer == "N" or "No" or "F" or "False":
-        in_position = False
-        min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
-    else:
-        pass
-    
-    max_loss = 0.51/100
-    min_gain = 1.05/100
-    
-    time.sleep(1)
-    print("\n\n Great! I'll get to work right away...")
-    print(f"\tI'll be back in {timeframe} with my results.")
-# {end params for tradeable-user}
-
 # {begin params for non-tradeable-user}
-elif q1 == ("N" or "n" or "No" or "no"):
+if q0 == ("N" or "n" or "No" or "no"):
     timeframe = input("Enter desired timeframe - 1m, 5m, 15m, 30m, 1h, 1d: ")
     
     tick = input("\nEnter your ticker of choice: ").upper().replace(' ','')
     
     ticker=  tick+"/"+input("\nEnter the denomination of your trade,\n      some of the options are USD, BUSD, or USDT?: ").upper().replace(' ','')
 
-    
-    # considerations for atr_multiplier
+    # setup timeframe_window
+    timeframe = input("\nPlease select your candlestick interval values - 1m, 5m, 15m, 30m, 1h, or 1d: ").capitalize().replace(' ','')
+
+    # presets for volatility
     if timeframe == "1m" or "5m":
         volatility = 0.6545454
 
-    if timeframe == "15m" or "30m":
+    elif timeframe == "15m" or "30m":
         volatility = 1.3545454
 
-    else:
+    elif timeframe == "1h" or "1d":
         volatility = 1.6545454
-    time.sleep(0)
     
-    print("\n\n Great! I'll start analyzing...")
-    time.sleep(1)
-    print(f"\tI'll be back in {timeframe} with my some insightful data for ya!\n\t\tDon't go anywhere!")
-    
-    time.sleep(0)
-    print(f"\tI'm just playin' with you {name}, you're probably human!\nYou can do whatever your heart desires.")
-    
-    value = randint(1,42) + 42
-    if (value % 2) == 0:
-        time.sleep(1)
-        print(f"\tHey {name}, what is a heart anyway?")
-        time.sleep(2)
-        print("\nBoof! sorry, I got sidetracked... Okay, boss! I'll be right back.")
+    print("\n\n Great! I'll get to work right away...")
+    print(f"\tI'll be back in {timeframe} with my results.")
 # {end params for non-tradeable-user}
-        
+else:
+    pass
+
+time.sleep(1)
+
 print("\n##~##  ┌( ಠ_ಠ)┘  ##~##")
 time.sleep(2)
 
@@ -261,24 +182,6 @@ print("\n....Boop Beep Boop. Boop Beep.")
 time.sleep(1)
 
 print("\n.......Boop Beep Beep!") # bc why tf not?
-
-# Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
-# Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
-if timeframe == "1m":
-    a = 55
-    b = 60
-if timeframe == "5m":
-    a = 275
-    b = 300
-if timeframe == "15m":
-    a = 850
-    b = 900
-if timeframe == "30m":
-    a = 1775
-    b = 1800
-if timeframe == "1h":
-    a = 3575
-    b = 3600
 
 # Supertrend
 # (TR) The true range indicator is taken as the greatest of the following: current high less the current low; the absolute value of the current high less the previous close; and the absolute value of the current low less the previous close
@@ -353,10 +256,10 @@ def check_buy_sell_signals(df):
         
     # {begin setup for non-tradeable-user}
     
-    if q1 == ("N" or "n" or "No" or "no"):
+    if q0 == ("N" or "n" or "No" or "no"):
         
-        print(f"\nOpen: {open_price}, High: {high_price}")
-        print(f"Low: {low_price}, Close: {close_price}")
+        print(f"\nOpen: {open_price}\t\tHigh: {high_price}")
+        print(f"Low: {low_price}\t\tClose: {close_price}")
         
         # check for downtrend - if in_uptrend goes from True to False
         if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
@@ -366,11 +269,12 @@ def check_buy_sell_signals(df):
         # check for uptrend - if in_uptrend goes from False to True
         if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
             print("\nChanged to uptrend! | (• ◡•)| That's quite mathematical in'nit?")
+    else:pass
     
     # {end setup for non-tradeable user}
     
     ### {setup for tradeable-user} ###
-    elif q1 == ("Y" or "y" or "Yes" or "yes"):
+    if q0 == ("Y" or "y" or "Yes" or "yes"):
         
         # {start of peak & trough - analysis}
         
@@ -558,9 +462,7 @@ def check_buy_sell_signals(df):
                 # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
                 print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
             
-            elif not in_position and (trough_sell or peak_sell):
-                print("┌( ಠ_ಠ)┘ Whoa! trough volatility alert.")
-                print("\n         Or was it a peak volatility, what do you think? ┌( ಠ_ಠ)┘")
+            #elif not in_position and (trough_sell or peak_sell):
         
         # check for uptrend - if in_uptrend goes from False to True
         if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
@@ -595,7 +497,7 @@ def check_buy_sell_signals(df):
 
         else:
             pass    
-    ### {setup for tradeable-user} ###
+    else:pass
     
 # do it... just do it
 def run_bot():
@@ -618,7 +520,7 @@ def run_bot():
     check_buy_sell_signals(supertrend_data)
     
     # tradeable-user position data
-    if q1 == ("Y" or "y" or "Yes" or "yes"):
+    if q0 == ("Y" or "y" or "Yes" or "yes"):
         # determined initially by tradeable-user
         print(f"\nIn position: {in_position}\nTimeframe: {timeframe}\n")
 
@@ -634,8 +536,6 @@ def run_bot():
         print(f"Min gain: {min_gain},\t\tMax loss:{max_loss}")
     else:
         pass
-#############################    #############################    #############################    #############################    #############################
-    
 """
 Run Bot, To the Moon
 """
@@ -646,3 +546,68 @@ bot = True
 while bot:
     schedule.run_pending()
     time.sleep(0)
+    
+    
+#NOTES
+#############################    #############################    #############################    #############################    #############################
+    
+    
+    # Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
+    # Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
+    if timeframe == "1m":
+        a = 55
+        b = 60
+    if timeframe == "5m":
+        a = 275
+        b = 300
+    if timeframe == "15m":
+        a = 850
+        b = 900
+    if timeframe == "30m":
+        a = 1775
+        b = 1800
+    if timeframe == "1h":
+        a = 3575
+        b = 3600
+    
+    
+#########################{begin params for other tradeable-user}#########################
+    
+    if q1 == ("Y" or "y" or "Yes" or "yes"):
+        time.sleep(1)
+        # introduce yourself to bot
+
+        tick = input("\nInsert a ticker: ").upper().replace(' ','')
+        ticker=  tick+"/"+input("\nEnter the denomination you want to trade, i.e. USD, BUSD, or USDT?: ").upper().replace(' ','')
+
+        else:
+            print("I don't recognize that response. Start again.")
+
+        order_size = float(input(f"\nOrder size in {tick}: "))
+        og_size = order_size
+
+        # just a little redundance here, will fix later
+        answer = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
+
+        if answer == "Y" or "Yes" or "T" or "True":
+            in_position = True
+            min_sell_price = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)[0][4]
+
+        elif asnwer == "N" or "No" or "F" or "False":
+            in_position = False
+            min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
+        else:
+            pass
+
+        max_loss = 0.51/100
+        min_gain = 1.05/100
+
+        time.sleep(1)
+        print("\n\n Great! I'll get to work right away...")
+        print(f"\tI'll be back in {timeframe} with my results.")
+
+    else:
+        pass
+    # {end params for tradeable-user}
+    
+
