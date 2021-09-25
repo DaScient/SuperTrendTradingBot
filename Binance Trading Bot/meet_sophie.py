@@ -488,7 +488,7 @@ def check_buy_sell_signals(df):
                 order_size = order_size*(1-0.1)
 
                 # limits the size reduction from above
-                if order_size < og_size * 0.85:
+                if order_size < og_size * 0.95:
                     order_size = og_size
                 else:
                     pass
