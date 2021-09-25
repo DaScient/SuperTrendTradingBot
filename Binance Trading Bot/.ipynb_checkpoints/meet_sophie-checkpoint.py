@@ -65,8 +65,7 @@ q0 = input("\n...If you plan on trading, would you like to meet with Sohpie befo
 
 time.sleep(0)
 
-# tradeable-user setting 
-#################################################################
+# tradeable-user setting
 q1 = input("\n....Would you like Sophie to trade for you? (Yes/No): ").capitalize()
 
 if q1 == ("Y" or "y" or "Yes" or "yes"):
@@ -78,8 +77,8 @@ if q1 == ("N" or "n" or "No" or "no"):
     print(" \n...Great, I'd love a good company like you to join me!")
     print(" \n..Let's keep our eyes on the market.")
     print(" \n.I'll tell you what I find.")
-#################################################################
 
+# {begin sophie introduction}
 if q0 == ("Y" or "y" or "Yes" or "yes"):
     #print("MEET SOPHIE!")
     print("""
@@ -107,19 +106,12 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
                                                   | $$                                  
                                                   |__/                                  
     """)
-    ###########################################
     # meet sophie
     time.sleep(2)
     print(".")
     time.sleep(1)
     print("\n..Before we begin I have a few questions to help us get started.")
     time.sleep(2)
-    ###########################################
-else:
-    pass
-
-# {begin sophie introduction}
-if q0 == ("Y" or "y" or "Yes" or "yes"):
     
     print("\n....What is the prefix of the asset you want to trade?")
     time.sleep(1)
@@ -171,9 +163,11 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
     time.sleep(2)
     print(f"\n\nOkay! I have everything I need. \nI'll be back in {timeframe} to show what I've got.")
 
+else:
+    pass
 # {end sophie introduction}
 
-# {begin params for tradeable-user}
+# {begin params for other tradeable-user}
 if q1 == ("Y" or "y" or "Yes" or "yes"):
     time.sleep(1)
     # introduce yourself to bot
@@ -200,24 +194,31 @@ if q1 == ("Y" or "y" or "Yes" or "yes"):
     
     # just a little redundance here, will fix later
     answer = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
+    
     if answer == "Y" or "Yes" or "T" or "True":
         in_position = True
         min_sell_price = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)[0][4]
+    
     elif asnwer == "N" or "No" or "F" or "False":
         in_position = False
         min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
+    else:
+        pass
+    
     max_loss = 0.51/100
     min_gain = 1.05/100
     
     time.sleep(1)
-    print("\n\n Great! I'll get to work...")
-    print(f"\tI'll be back in {timeframe} with my first results.")
+    print("\n\n Great! I'll get to work right away...")
+    print(f"\tI'll be back in {timeframe} with my results.")
 # {end params for tradeable-user}
 
 # {begin params for non-tradeable-user}
 elif q1 == ("N" or "n" or "No" or "no"):
-    timeframe = input("Choose between - 1m, 5m, 15m, 30m, 1h, 1d: ")
-    tick = input("\nInsert ticker: ").upper().replace(' ','')
+    timeframe = input("Enter desired timeframe - 1m, 5m, 15m, 30m, 1h, 1d: ")
+    
+    tick = input("\nEnter your ticker of choice: ").upper().replace(' ','')
+    
     ticker=  tick+"/"+input("\nEnter the denomination of your trade,\n      some of the options are USD, BUSD, or USDT?: ").upper().replace(' ','')
 
     
@@ -245,7 +246,6 @@ elif q1 == ("N" or "n" or "No" or "no"):
         print(f"\tHey {name}, what is a heart anyway?")
         time.sleep(2)
         print("\nBoof! sorry, I got sidetracked... Okay, boss! I'll be right back.")
-
 # {end params for non-tradeable-user}
         
 print("\n##~##  ┌( ಠ_ಠ)┘  ##~##")
@@ -350,8 +350,27 @@ def check_buy_sell_signals(df):
     mini_downtrend = ~df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0]
     mini_uptrend = df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0]
 
-    # tradeable-user
-    if q1 == ("Y" or "y" or "Yes" or "yes"):
+        
+    # {begin setup for non-tradeable-user}
+    
+    if q1 == ("N" or "n" or "No" or "no"):
+        
+        print(f"\nOpen: {open_price}, High: {high_price}")
+        print(f"Low: {low_price}, Close: {close_price}")
+        
+        # check for downtrend - if in_uptrend goes from True to False
+        if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
+            print("\n| (• ◡•)| 'Hey Jake! Is this mathematical?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! Nope, this is what a bear market.")
+            print("\n\n\n(❍ᴥ❍ʋ) 'Why bears need a market for anything, I have no idea.' | (• ◡•)| \n\t\t'Hahahaha!")
+        
+        # check for uptrend - if in_uptrend goes from False to True
+        if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+            print("\nChanged to uptrend! | (• ◡•)| That's quite mathematical in'nit?")
+    
+    # {end setup for non-tradeable user}
+    
+    ### {setup for tradeable-user} ###
+    elif q1 == ("Y" or "y" or "Yes" or "yes"):
         
         # {start of peak & trough - analysis}
         
@@ -392,60 +411,19 @@ def check_buy_sell_signals(df):
         print(f"\nMini-timeframe downtrend identified - selling point: {volatility_sell}")
         print(f"Mini-timeframe uptrend identified - buying point: {not in_position and not mini_downtrend}")
         ## {end of real-time trend/volatility analysis} ##
-    
-    # non-tradeable users
-    elif q1 == ("N" or "n" or "No" or "no"):
-        print(f"\nOpen: {open_price}, High: {high_price}")
-        print(f"Low: {low_price}, Close: {close_price}")
-        
-        
-    # check for uptrend - if in_uptrend goes from False to True
-    if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
 
-        # all-user print out
-        print("\nChanged to uptrend! | (• ◡•)| That's quite mathematical in'nit?")
 
-        # tradeable-user
-        if q1 == ("Y" or "y" or "Yes" or "yes"):
-            # enter position when in_uptrend True
-            if not in_position:
-                # BUY 
-                # send binance buy order
-                order = exchange.create_market_buy_order(f'{ticker}', order_size)
-
-                # i really should just output this as a dataframe()
-                print(f"\nStatus: {order['info']['status']},\
-                      \nPrice: {order['trades'][0]['info']['price']},\
-                      \nQuantity: {order['info']['executedQty']},\
-                      \nType: {order['info']['side']}")
-
-                # just catching how many i caught
-                quant = float(order['info']['executedQty'])
-
-                # replaces min_sell_price by purchase_price
-                min_sell_price = float(order['trades'][0]['info']['price'])
-
-                # we are now in_position
-                in_position = True
-
-                print(f"Purchased @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")       
-        else:
-            print("This is a GREAT position to be in right now, boom-shaka! ┌( ಠ_ಠ)┘ ")
-    
-    # this part is only applicable to tradeable-user
-    # here we consider conditions set above (peak_sell, trough_sell, & volatility_sell), as well as, 
-    # other conditions in an uptrend for which we could execute an order
-    if q1 == ("Y" or "y" or "Yes" or "yes"):
+        # this part is only applicable to tradeable-user
+        # here we consider conditions set above (peak_sell, trough_sell, & volatility_sell), as well as, 
+        # other conditions in an uptrend for which we could execute an order
         
         # sells during a "1m timeframe" uptrend, when volitile_sell is triggered, and also respecting the above trough & peak selling conditions
         if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
 
-            # under special circumstances, selling points can be found as stated below:       
-                                        # Need to expirement with this conditional
+            # under special circumstances, selling points can be found as stated below:
             if in_position and (min_sell_price * (1 + min_gain) < low_price) and (volatility_sell or peak_sell or trough_sell):
                 
-                # SELL
-                # send binance sell order
+                # SELL - send binance sell order
                 order = exchange.create_market_sell_order(f'{ticker}',order_size)
                 time.sleep(2)
                 print("\n Unless... it's actually a volitile mini-peakage. Oh! no | (• ◡•)|\n ......... Let's catch the next uphill.")
@@ -498,21 +476,10 @@ def check_buy_sell_signals(df):
 
                 # we are now in_position
                 in_position = True
-                print(f"Purchased @ ${min_sell_price:n},for ${min_sell_price * quant:n}")         
-        else:
-            pass
-    else:
-        if mini_downtrend:
-            print("Boom boom, boss! ┌( ಠ_ಠ)┘ \nI've detected a mini-timeframe volatility")
-
-    # check for downtrend - if in_uptrend goes from True to False
-    if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
+                print(f"Purchased @ ${min_sell_price:n},for ${min_sell_price * quant:n}")   
         
-        print(f"\nOh no, {name}! we're going downhill bro... booo! (❍ᴥ❍ʋ) \nWe should dip sauce! There's def no math here.")
-        print("\n\t\t | (• ◡•)| It's totes a perf time to sell, yay!")
-        
-        # tradeable-user
-        if q1 == ("Y" or "y" or "Yes" or "yes"):
+        # check for downtrend - if in_uptrend goes from True to False
+        if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
             # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) or peak_sell = True or volatility_sell = True
             if in_position and (trough_sell or peak_sell):
 
@@ -546,19 +513,16 @@ def check_buy_sell_signals(df):
                 print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
             
             # i just can't help with these lol
-            else:
-                if randint(1,30) < 5:
+            elif in_position and not (trough_sell or peak_sell):
+                value = randint(1,30)
+                if value > 5:
                     print("\nI didn't find this to be an opportunity to sell (☞ﾟヮﾟ)☞ haha yay!")
-                elif randint(1,15) < 4:
+                elif value < 5:
                     print("\n| (• ◡•)| 'Hey Jake! Is this mathematical?' (❍ᴥ❍ʋ) \n\t\t'Yo, Finn! Whattup! No, don't you even think about it!")
-                else:
-                    print("\nNothing to sell here folks! (☞ﾟヮﾟ)☞ ")
-        else:
-            pass
-            
-    # for the tradeable-user if we are in an uptrend & low_price stays above our min_sell, 
-    #the bot will sell when trough_sell or peak_sell are triggered
-    if q1 == ("Y" or "y" or "Yes" or "yes"):
+        
+        
+        # for the tradeable-user if we are in an uptrend & low_price stays above our min_sell, 
+        # the bot will sell when trough_sell or peak_sell are triggered
         if (df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index] and min_sell_price * (1 + min_gain) < low_price):
 
         
@@ -597,12 +561,42 @@ def check_buy_sell_signals(df):
             elif not in_position and (trough_sell or peak_sell):
                 print("┌( ಠ_ಠ)┘ Whoa! trough volatility alert.")
                 print("\n         Or was it a peak volatility, what do you think? ┌( ಠ_ಠ)┘")
-   
-    # {potential/new condishes}
-    # this will repeat the above statement with one difference, that it's only concern is whether the last two rows are downtrend
-    if (not df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
-        pass
+        
+        # check for uptrend - if in_uptrend goes from False to True
+        if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+            
+            print("\nChanged to uptrend! | (• ◡•)| That's quite mathematical in'nit?")
 
+            # enter position when in_uptrend True
+            if not in_position:
+                
+                # BUY -  send binance buy order
+                order = exchange.create_market_buy_order(f'{ticker}', order_size)
+
+                # i really should just output this as a dataframe()
+                print(f"\nStatus: {order['info']['status']},\
+                      \nPrice: {order['trades'][0]['info']['price']},\
+                      \nQuantity: {order['info']['executedQty']},\
+                      \nType: {order['info']['side']}")
+
+                # just catching how many i caught
+                quant = float(order['info']['executedQty'])
+
+                # replaces min_sell_price by purchase_price
+                min_sell_price = float(order['trades'][0]['info']['price'])
+
+                # we are now in_position
+                in_position = True
+
+                print(f"Purchased @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")       
+            
+            else:
+                print(f"This could be a GREAT time to add or increase your position in {tick}, boom-shaka! ┌( ಠ_ಠ)┘ ")
+
+        else:
+            pass    
+    ### {setup for tradeable-user} ###
+    
 # do it... just do it
 def run_bot():
     print()
@@ -638,10 +632,10 @@ def run_bot():
         print(f"Balance:${bal * bars[-1][1]:n},\tPosition: {bal:n}")
         print(f"Order size: {order_size},\tVolatility: {volatility}")
         print(f"Min gain: {min_gain},\t\tMax loss:{max_loss}")
-    
-    elif q1 == ("N" or "n" or "No" or "no"):
+    else:
         pass
-
+#############################    #############################    #############################    #############################    #############################
+    
 """
 Run Bot, To the Moon
 """
