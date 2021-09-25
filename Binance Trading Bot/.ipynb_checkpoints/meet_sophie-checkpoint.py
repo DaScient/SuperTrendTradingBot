@@ -122,15 +122,15 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
     
     print("\n....What is the prefix of the asset you want to trade?")
     time.sleep(1)
-    tick = input("\n...Some popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper()
+    tick = input("\n...Some popular ones are SHIB, DOGE, BTC, ETH, or VET: ").upper().replace(' ','')
     time.sleep(0)
     print("\n..Nice! That's a great choice.")
     time.sleep(1)
     print(f"\n\n\n.What denomination do you want to trade {tick} fin?")
-    ticker =  tick+"/"+input("\n..Maybe you have tradeable amounts of USD, BUSD, or USDT?: ").upper()
+    ticker =  tick+"/"+input("\n..Maybe you have tradeable amounts of USD, BUSD, or USDT?: ").upper().replace(' ','')
     time.sleep(0)
     print("\n\n\n...This might be a silly question, but how often would you like to check up on this asset?")
-    timeframe = input("\n....You can put anything like 1m, 5m, *15m, 30m, 1h, or 1d: ")
+    timeframe = input("\n....You can put anything like 1m, 5m, *15m, 30m, 1h, or 1d: ").replace(' ','')
     print(" *15m is our fave!")
     
     if timeframe == "1m" or "5m":
@@ -147,12 +147,12 @@ if q0 == ("Y" or "y" or "Yes" or "yes"):
 
     time.sleep(1)
     
-    print("\n\n.....Awesome! How many "+tick+" would you like me to continuously trade for you?")
+    print(f"\n\n.....Awesome! How many {tick} would you like me to continuously trade for you?")
     order_size = float(input("\n......Remember, all trades on Binance.US must be above $10: "))
     og_size = order_size
     time.sleep(0)
     
-    q2 = str(input(f"\n\n.....Are you already holding ~10% more than this amount of {tick} in your portfolio? (Yes/No): ")).capitalize()
+    q2 = str(input(f"\n\n.....Are you already holding ~10% more than this amount of {tick} in your portfolio? (Yes/No): ")).capitalize().replace(' ','')
     if q2 == ("Y" or "y" or "Yes" or "yes"):
         in_position = True
         min_sell_price = float(input(f"\n....What was the price of {tick} when you bought them?: "))
@@ -171,9 +171,9 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
     time.sleep(1)
     # introduce yourself to bot
 
-    tick = input("\nInsert a ticker: ").upper()
-    ticker=  tick+"/"+input("\nEnter the denomination you want to trade, i.e. USD, BUSD, or USDT?: ").upper()
-    timeframe = input("\nYou can put anything in (1m, 5m, 15m, 30m, 1h, or 1d): ").capitalize()
+    tick = input("\nInsert a ticker: ").upper().replace(' ','')
+    ticker=  tick+"/"+input("\nEnter the denomination you want to trade, i.e. USD, BUSD, or USDT?: ").upper().replace(' ','')
+    timeframe = input("\nYou can put anything in (1m, 5m, 15m, 30m, 1h, or 1d): ").capitalize().replace(' ','')
     
     # presets for volatility
     if timeframe == "1m" or "5m":
@@ -188,10 +188,16 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
     else:
         print("I don't recognize that response. Start again.")
     
-    order_size = float(input("\nOrder size in "+tick+": "))
+    order_size = float(input(f"\nOrder size in {tick}: "))
     og_size = order_size
-    in_position = ast.literal_eval(input("\nAlready in desired holding position? - True/False: ").capitalize().replace(' ',''))
     
+    # just a little redundance here, will fix later
+    in_position = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
+    if in_position == "Y" or "Yes" or "T" or "True":
+        in_position = True
+    else:
+        in_position = False
+        
     min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
     max_loss = float(input("\nMax loss (example 0.51): "))/100
     min_gain = float(input("\nMin gain (example 1.05): "))/100
@@ -209,8 +215,8 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
 # non-tradeable user
 elif q1 == ("N" or "n" or "No" or "no"):
     timeframe = input("Choose between - 1m, 5m, 15m, 30m, 1h, 1d: ")
-    tick = input("\nInsert ticker: ").upper()
-    ticker=  tick+"/"+input("\nEnter the denomination of your trade,\n      some of the options are USD, BUSD, or USDT?: ").upper()
+    tick = input("\nInsert ticker: ").upper().replace(' ','')
+    ticker=  tick+"/"+input("\nEnter the denomination of your trade,\n      some of the options are USD, BUSD, or USDT?: ").upper().replace(' ','')
     
     # considerations for atr_multiplier
     if timeframe == "1m" or "5m":
