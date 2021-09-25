@@ -192,15 +192,15 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
     og_size = order_size
     
     # just a little redundance here, will fix later
-    in_position = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
-    if in_position == "Y" or "Yes" or "T" or "True":
+    answer = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
+    if answer == "Y" or "Yes" or "T" or "True":
         in_position = True
         min_sell_price = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)[0][4]
-    else:
+    elif asnwer == "N" or "No" or "F" or "False":
         in_position = False
         min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
-    max_loss = float(input("\nMax loss (example 0.51): "))/100
-    min_gain = float(input("\nMin gain (example 1.05): "))/100
+    max_loss = 0.51/100
+    min_gain = 1.05/100
 
 # let's start!
 if q0 == ("Y" or "y" or "Yes" or "yes"):
