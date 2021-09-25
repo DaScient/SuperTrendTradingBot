@@ -195,10 +195,10 @@ elif q1 == ("Y" or "y" or "Yes" or "yes"):
     in_position = input("\nAlready in desired holding position?: ").capitalize().replace(' ','')
     if in_position == "Y" or "Yes" or "T" or "True":
         in_position = True
+        min_sell_price = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=1)[0][4]
     else:
         in_position = False
-        
-    min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
+        min_sell_price = float(input("\nEnter average_price or most recent purchase price: "))
     max_loss = float(input("\nMax loss (example 0.51): "))/100
     min_gain = float(input("\nMin gain (example 1.05): "))/100
 
@@ -384,8 +384,8 @@ def check_buy_sell_signals(df):
         else:
             volatility_sell = False
         
-        print("\nMini-timeframe downtrend identified - selling point: ",str(volatility_sell))
-        print("Mini-timeframe uptrend identified - buying point: ", (not in_position and not mini_downtrend))
+        print(f"\nMini-timeframe downtrend identified - selling point: {volatility_sell}")
+        print(f"Mini-timeframe uptrend identified - buying point: {not in_position and not mini_downtrend}")
         ## {end of real-time trend/volatility analysis} ##
     
     # non-tradeable users
