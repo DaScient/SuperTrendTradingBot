@@ -460,7 +460,7 @@ def check_buy_sell_signals(df):
     (df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index] and min_sell_price * (1 + min_gain) < low_price):
         
         print("\nOh no! we're going downhill bro... booo! (❍ᴥ❍ʋ) We should dip sauce! There's no math here.")
-        print("\n\t\t | (• ◡•)| It's a perf time to sell, if you don't like the taste of fiddlesticks!")
+        print("\n\t\t | (• ◡•)| It's a perf time to sell, yay!")
         
         # tradeable-user
         if q1 == "Yes":
