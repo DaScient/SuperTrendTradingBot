@@ -16,35 +16,35 @@ ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 # for reference see config.py
 value = randint(2,199)
 print(f"randint: {value}\n\n...")
-if 1 < value < 25:
+if 1 < value <= 25:
     key = config.BINANCE_KEY_v7
     secret = config.BINANCE_SECRET_v7
 
-if 25 < value < 50:
+if 25 < value <= 50:
     key = config.BINANCE_KEY_v6
     secret = config.BINANCE_SECRET_v6
 
-if 50 < value < 75:
+if 50 < value <= 75:
     key = config.BINANCE_KEY_v5
     secret = config.BINANCE_SECRET_v5
 
-if 75 < value < 100:
+if 75 < value <= 100:
     key = config.BINANCE_KEY_v4
     secret = config.BINANCE_SECRET_v4
     
-if 100 < value < 125:
+if 100 < value <= 125:
     key = config.BINANCE_KEY_v3
     secret = config.BINANCE_SECRET_v3
 
-if 125 < value < 150:
+if 125 < value <= 150:
     key = config.BINANCE_KEY_v2
     secret = config.BINANCE_SECRET_v2
 
-if 155 < value < 175:
+if 150 < value <= 175:
     key = config.BINANCE_KEY_v1
     secret = config.BINANCE_SECRET_v1
     
-if 175 < value < 200:
+if 175 < value <= 200:
     key = config.BINANCE_KEY_v0
     secret = config.BINANCE_SECRET_v0
 # {end of random key generator}
@@ -58,14 +58,22 @@ ticker = tick+"/"+input("Enter denomination (examples: USD, USDT, BUSD, BTC): ")
 timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
 order_size = float(input("Order size in "+tick+": "))
 og_size = order_size
-in_position = ast.literal_eval(input("Aleady in desired holding position? - True/False: ").capitalize())
+in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
+
+# it's good to have a higher min_sell_price value
 min_sell_price = float(input("Minimum sell price: %"))
-max_loss = float(input("Max loss: %"))/100
+
+# having a very minimal max_loss threshold is beneficial
+max_loss = 0.001 # float(input("Max loss: %"))/100
+
+# it's not a bad idea to let this be higher
+# the longer the bot will wait to sell
 min_gain = float(input("Min gain: %"))/100
 
 # randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
 # feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes..
 # also, volatilities might be okay as presets for now
+
 if timeframe == "1m":
     a = 55
     b = 60
@@ -86,7 +94,12 @@ elif timeframe == "1h":
     a = 3575
     b = 3600
 
-volatility = 0.54545454
+# https://medium.com/codex/algorithmic-trading-with-the-keltner-channel-in-python-9c272051d43d
+# might be worth a try
+volatility = 0.003545454
+#volatility = 0.54545454
+
+period = 42 #int(input("Enter the rolling average period (7 - 42): "))
 
 print(f"Loading...\nPlease allow for {timeframe} until initial results are printed.")
 
@@ -107,7 +120,8 @@ def atr(data, period):
     return atr
 
 # https://www.tradingfuel.com/supertrend-indicator-formula-and-calculation/ #It's important to treat the atr_multiplier as a variable. See supertrend_visualizer_parquet.py to see how atr_mult affects indication. Volatility rate varies from 0.0001 - 3. Smaller numbers for 1m intervals. Larger number for day or swing trades.
-def supertrend(df, period = 7, atr_multiplier = volatility):
+
+def supertrend(df, period = period, atr_multiplier = volatility):
     hl2 = (df['high'] + df['low'])/2
     df['atr'] = atr(df, period)
     df['upperband'] = hl2 + (atr_multiplier * df['atr'])
@@ -149,7 +163,10 @@ def check_buy_sell_signals(df):
     # this might be able to calculate a downtrend during an immediate peak_sell event
     # thus allowing for more conditions be met
     bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
-    df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    #df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    
+    #trying different
+    df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
 
     # calculates most recent 1-minute trend
@@ -176,14 +193,14 @@ def check_buy_sell_signals(df):
     peak_sell = max_low < low_price
 
     # prints data
-    print(f"\nLow price: {low_price}, \tMax low: {max_low}")
-    print(f"Close price:: {close_price}, \tPeak breached (downtrend-sell): {peak_sell}")
+    print(f"\nLow price: {low_price} Max low: {max_low}")
+    print(f"Close price: {close_price} Peak breached (downtrend-sell): {peak_sell}")
 
     # a sell point from trough could be identified when low price goes above min_sell_price(1 + min_gain): 
     trough_sell = min_sell_price * (1 + min_gain) < low_price
 
     # check if min_sell_price < low_price - which would thus execute a sell
-    print(f"High price: {high_price}, \tTrough breached (downtrend-sell): {trough_sell}")
+    print(f"High price: {high_price} Trough breached (downtrend-sell): {trough_sell}")
 
     print(f"\nMinimum sell price: {min_sell_price}")
     # {end of peak & trough - analysis}
@@ -196,8 +213,8 @@ def check_buy_sell_signals(df):
     else:
         volatility_sell = False
 
-    print(f"\nMini-timeframe downtrend identified - selling point: {volatility_sell}")
-    print(f"Mini-timeframe uptrend identified - buying point: {not in_position and not mini_downtrend}")
+    print(f"\nMini-timeframe downtrend identified - selling signal: {volatility_sell}")
+    print(f"Mini-timeframe uptrend identified - buying signal: {not in_position and not mini_downtrend}")
     ## {end of near-real-time volatility analysis} ##
 
 
@@ -266,7 +283,7 @@ def check_buy_sell_signals(df):
 
             # we are now in_position
             in_position = True
-            print(f"Purchased @ ${min_sell_price:n},for ${min_sell_price * quant:n}")   
+            print(f"Purchased @ ${min_sell_price:n} for ${min_sell_price * quant:n}")   
 
     # check for downtrend - if in_uptrend goes from True to False
     if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
@@ -287,7 +304,7 @@ def check_buy_sell_signals(df):
             # just catching how many i caught
             quant = float(order['info']['executedQty'])
 
-            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")        
+            print(f"Sold @ ${min_sell_price:n} for ${min_sell_price * quant:n}")        
 
             # we are no longer in_position
             in_position = False
@@ -389,8 +406,8 @@ def run_bot():
     print(f"Generating market indications for {name}.")
     
     # pulls in df to be used for calculations
-    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=42)
-    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=150)
+    df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
         
     # application of supertrend formula
@@ -409,15 +426,14 @@ def run_bot():
     bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
 
     # printouts 
-    print(f"Balance:${bal * bars[-1][1]:n},\tPosition: {bal:n}")
-    print(f"Order size: {order_size},\tVolatility: {volatility}")
-    print(f"Min gain: {min_gain},\t\tMax loss:{max_loss}")
+    print(f"Balance:${bal * bars[-1][1]:n} Position: {bal:n}")
+    print(f"Order size: {order_size} Volatility: {volatility}")
+    print(f"Min gain: {min_gain} Max loss:{max_loss}")
 
 """
 Run Bot, To the Moon
 """
 schedule.every(randint(a,b)).seconds.do(run_bot)
-
 # variable assigned to exercising the bot
 bot = True
 while bot:
