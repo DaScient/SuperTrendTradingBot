@@ -61,7 +61,7 @@ og_size = order_size
 in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
 
 # it's good to have a higher min_sell_price value
-min_sell_price = float(input("Minimum sell price: %"))
+min_sell_price = float(input("Minimum sell price: $"))
 
 # having a very minimal max_loss threshold is beneficial
 max_loss = 0.001 # float(input("Max loss: %"))/100
