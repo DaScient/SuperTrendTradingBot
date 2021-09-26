@@ -154,19 +154,22 @@ def check_buy_sell_signals(df):
     previous_row_index = last_row_index - 1 
     
     # most recent 'full' candlestick - ohlc
-    open_price = df.reset_index(drop=True)['open'][0]
-    high_price = df.reset_index(drop=True)['high'][0]
-    low_price = df.reset_index(drop=True)['low'][0]
-    close_price = df.reset_index(drop=True)['close'][0]
+    open_price = df[-1:].reset_index(drop=True)['open'][0]
+    high_price = df[-1:].reset_index(drop=True)['high'][0]
+    low_price = df[-1:].reset_index(drop=True)['low'][0]
+    close_price = df[-1:].reset_index(drop=True)['close'][0]
     
     # i wanted to create a separate frame of reference from a mini-1m timeframe
     # this might be able to calculate a downtrend during an immediate peak_sell event
     # thus allowing for more conditions be met
     bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
-    #df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    
+    # original
+    df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     
     #trying different
-    df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    #df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    
     df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
 
     # calculates most recent 1-minute trend
@@ -187,17 +190,17 @@ def check_buy_sell_signals(df):
     max_low = min_sell_price * (1 + max_loss)
 
     # a sell point from peak could be identified when low price goes above max_low * (1 + max_loss): 
-    #peak_sell = max_low * (1 + max_loss) < low_price
+    #peak_sell = max_low * (1 + max_loss) < close_price or low_price
 
-    # or  a sell point from peak could be identified when low_price goes above max_low
-    peak_sell = max_low < low_price
+    # or  a sell point from peak could be identified when close_price goes above max_low
+    peak_sell = max_low < (close_price or low_price)
 
     # prints data
     print(f"\nLow price: {low_price} Max low: {max_low}")
     print(f"Close price: {close_price} Peak breached (downtrend-sell): {peak_sell}")
 
     # a sell point from trough could be identified when low price goes above min_sell_price(1 + min_gain): 
-    trough_sell = min_sell_price * (1 + min_gain) < low_price
+    trough_sell = min_sell_price * (1 + min_gain) < (close_price or low_price)
 
     # check if min_sell_price < low_price - which would thus execute a sell
     print(f"High price: {high_price} Trough breached (downtrend-sell): {trough_sell}")
@@ -208,7 +211,7 @@ def check_buy_sell_signals(df):
     ## {near-real-time volatility analysis} ##
     # another sell variable can be identified if trend in 1m timeframe changes
     # if mini_downtrend is identified, sophie trigger sells (see mini_downtrend above)
-    if mini_downtrend and (min_sell_price * (1 + min_gain) < low_price):
+    if mini_downtrend and (min_sell_price * (1 + min_gain) < (close_price or low_price)):
         volatility_sell = True
     else:
         volatility_sell = False
@@ -227,7 +230,7 @@ def check_buy_sell_signals(df):
     if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
 
         # under special circumstances, selling points can be found as stated below:
-        if in_position and (min_sell_price * (1 + min_gain) < low_price) and (volatility_sell or peak_sell or trough_sell):
+        if in_position and (min_sell_price * (1 + min_gain) < (close_price or low_price)) and (volatility_sell or peak_sell or trough_sell):
 
             # SELL - send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
@@ -326,14 +329,14 @@ def check_buy_sell_signals(df):
             print("Currently safe from trough/peak selling points.")
 
 
-    # for the tradeable-user if we are in an uptrend & low_price stays above our min_sell, 
+    # for the tradeable-user if we are in an uptrend & (close_price or low_price) stays above our min_sell, 
     # the bot will sell when trough_sell or peak_sell are triggered
-    if (df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index] and min_sell_price * (1 + min_gain) < low_price):
+    if (df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index] and min_sell_price * (1 + min_gain) < (close_price or low_price)):
 
 
         # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) 
         #or peak_sell = True or volatility_sell = True
-        if in_position and (trough_sell or peak_sell):
+        if in_position and (trough_sell or peak_sell) and (min_sell_price * (1 + min_gain) < (close_price or low_price)):
 
             # SELL
             # send binance sell order
@@ -390,7 +393,7 @@ def check_buy_sell_signals(df):
             # we are now in_position
             in_position = True
 
-            print(f"Purchased @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")       
+            print(f"Purchased @ ${min_sell_price:n} for ${min_sell_price * quant:n}")       
 
         else:
             print(f"This could be a GREAT time to increase your position in {tick}, boom-shaka! ┌( ಠ_ಠ)┘ ")
@@ -407,7 +410,7 @@ def run_bot():
     
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=150)
-    df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
         
     # application of supertrend formula
