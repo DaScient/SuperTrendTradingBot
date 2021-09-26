@@ -89,6 +89,8 @@ elif timeframe == "1h":
     b = 3600
     volatility = 1.6545454
 
+print(f"Loading...\nPlease allow for {timeframe} until initial results are printed.")
+
 # supertrend
 # (tr) the true range indicator is taken as the greatest of the following: current high less the current low; the absolute value of the current high less the previous close; and the absolute value of the current low less the previous close
 def tr(data):
@@ -139,25 +141,25 @@ def check_buy_sell_signals(df):
     previous_row_index = last_row_index - 1 
     
     # most recent 'full' candlestick - ohlc
-    open_price = df[-1:].reset_index(drop=True)['open'][0]
-    high_price = df[-1:].reset_index(drop=True)['high'][0]
-    low_price = df[-1:].reset_index(drop=True)['low'][0]
-    close_price = df[-1:].reset_index(drop=True)['close'][0]
+    open_price = df.reset_index(drop=True)['open'][0]
+    high_price = df.reset_index(drop=True)['high'][0]
+    low_price = df.reset_index(drop=True)['low'][0]
+    close_price = df.reset_index(drop=True)['close'][0]
     
     # i wanted to create a separate frame of reference from a mini-1m timeframe
     # this might be able to calculate a downtrend during an immediate peak_sell event
     # thus allowing for more conditions be met
     bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
-    df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(None)#tz = "America/Los_Angeles")
+    df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
 
     # calculates most recent 1-minute trend
     # used to decide "volatility_sell"
     df_2 = supertrend(df_2)
 
     # creates a mini_timeframe analysis of trend - if downtrend, then it's a sign of immediate bearish market
-    mini_downtrend = ~df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0]
-    mini_uptrend = df_2[-1:][["in_uptrend"]].reset_index().in_uptrend[0]
+    mini_downtrend = ~df_2[["in_uptrend"]].reset_index().in_uptrend[0]
+    mini_uptrend = df_2[["in_uptrend"]].reset_index().in_uptrend[0]
 
     # {start of peak & trough - analysis}
 
@@ -389,8 +391,8 @@ def run_bot():
     
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=42)
-    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(None)#tz = "America/Los_Angeles")
+    df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
         
     # application of supertrend formula
     supertrend_data = supertrend(df)
