@@ -199,8 +199,8 @@ def check_buy_sell_signals(df):
     # prints most recent full 1m data
     print(f"\nOpen: {open_price_1m}\tMax low: {max_low}")
     print(f"High: {high_price_1m}\tMinimum sell price: {min_sell_price}")
-    print(f"Low: {low_price_1m}\tSafe sell: {peak_sell}")
-    print(f"Close: {close_price_1m}")
+    print(f"Low: {low_price_1m}\tTimeframe: {timeframe}")
+    print(f"Close: {close_price_1m}\tSafe sell: {peak_sell}")
     # {end of peak & trough - analysis}
 
     ## {1minute-volatility analysis} ##
@@ -208,8 +208,9 @@ def check_buy_sell_signals(df):
     # if mini_downtrend is identified, sophie trigger sells (see mini_downtrend above)
     volatility_sell = mini_downtrend and peak_sell
     
+    print(f"Mini-timeframe  uptrend  identified - buying signal: {not in_position and not volatility_sell}")
     print(f"\nMini-timeframe downtrend identified - selling signal: {volatility_sell}")
-    print(f"Mini-timeframe uptrend  identified - buying signal: {not in_position and not volatility_sell}")
+
     ## {end of 1minute-volatility analysis} ##
 
 
@@ -416,11 +417,10 @@ def run_bot():
     bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
 
     # printouts
-    print(f"\nIn position: {in_position}\tTimeframe: {timeframe}\n")
-    print(f"Position: {bal:n}\tBalance:${bal * bars[-1][1]:n}")
-    print(f"Order size: {order_size}\tMin gain: {min_gain}")
-    print(f"Volatility: {volatility}")
-
+    print(f"\nIn position: {in_position}\tPosition: {bal:n}")
+    print(f"Balance:${bal * bars[-1][1]:n}\tOrder size: {order_size}")
+    print(f"Min gain: {min_gain}\tVolatility: {volatility}")
+    
 """
 Run Bot, To the Moon
 """
