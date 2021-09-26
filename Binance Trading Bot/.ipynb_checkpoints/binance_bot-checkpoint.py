@@ -6,47 +6,95 @@ from random import randint
 from random import seed
 import pandas as pd
 import numpy as np
+from rich import print, pretty
+pretty.install()
 
+# login
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
-exchange = ccxt.binanceus({
-"apiKey": config.BINANCE_KEY,
-"secret": config.BINANCE_SECRET,
-'enableRateLimit': True})
 
+# {random key generator}
+# for reference see config.py
+value = randint(2,199)
+print(f"randint: {value}\n\n...")
+if 1 < value < 25:
+    key = config.BINANCE_KEY_v7
+    secret = config.BINANCE_SECRET_v7
 
-name=input("Enter name: ")
-tick=input("Insert ticker: ")
-ticker=tick+"/"+input("USD or USDT? ")
-timeframe = input("Enter desired candlestick intervals, 1m,5m,15m,1h,1d: ")
-order_size = order_size = float(input("Order size in "+tick+": "))
+if 25 < value < 50:
+    key = config.BINANCE_KEY_v6
+    secret = config.BINANCE_SECRET_v6
+
+if 50 < value < 75:
+    key = config.BINANCE_KEY_v5
+    secret = config.BINANCE_SECRET_v5
+
+if 75 < value < 100:
+    key = config.BINANCE_KEY_v4
+    secret = config.BINANCE_SECRET_v4
+    
+if 100 < value < 125:
+    key = config.BINANCE_KEY_v3
+    secret = config.BINANCE_SECRET_v3
+
+if 125 < value < 150:
+    key = config.BINANCE_KEY_v2
+    secret = config.BINANCE_SECRET_v2
+
+if 155 < value < 175:
+    key = config.BINANCE_KEY_v1
+    secret = config.BINANCE_SECRET_v1
+    
+if 175 < value < 200:
+    key = config.BINANCE_KEY_v0
+    secret = config.BINANCE_SECRET_v0
+# {end of random key generator}
+
+exchange = ccxt.binanceus({"apiKey": key, "secret": secret, "enableRateLimit": True})
+
+# set params
+name = input("Input a name: ")
+tick = input("Insert ticker: ").upper()
+ticker = tick+"/"+input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
+timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
+order_size = float(input("Order size in "+tick+": "))
+og_size = order_size
 in_position = ast.literal_eval(input("Aleady in desired holding position? - True/False: ").capitalize())
-min_sell_price=float(input("Minimum sell price: "))
-prev_purch_price=min_sell_price
-perc=float(input("Enter percentage of desired markup: "+"%"))
-markup=1+perc/100
-max_loss=float(input("Enter percentage of max loss: "+"%"))/100
-volatility=float(input("Volatility rate (example: 0.55555 for short-term volatility, 3 for long-term volatility.): "))
+min_sell_price = float(input("Minimum sell price: %"))
+max_loss = float(input("Max loss: %"))/100
+min_gain = float(input("Min gain: %"))/100
 
-# Randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
-#Feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes.. 
+# randomizer for schedule. I know it's weird, but somehow it works nicely for me. 
+# feel free to remove randint(a,b) downstairs, and just let schedule(a).minutes..
+# also, volatilities might be okay as presets for now
 if timeframe == "1m":
     a = 55
     b = 60
-if timeframe == "5m":
+    volatility = 0.4545454
+    
+elif timeframe == "5m":
     a = 275
     b = 300
-if timeframe == "15m":
+    volatility = 0.8545454
+    
+elif timeframe == "15m":
     a = 850
     b = 900
-if timeframe == "30m":
+    
+    volatility = 1.3545454
+elif timeframe == "30m":
     a = 1775
     b = 1800
-if timeframe == "1h":
+    volatility = 1.4545454
+    
+elif timeframe == "1h":
     a = 3575
     b = 3600
+    volatility = 1.6545454
 
-# Supertrend
-# (TR) The true range indicator is taken as the greatest of the following: current high less the current low; the absolute value of the current high less the previous close; and the absolute value of the current low less the previous close
+print(f"Loading...\nPlease allow for {timeframe} until initial results are printed.")
+
+# supertrend
+# (tr) the true range indicator is taken as the greatest of the following: current high less the current low; the absolute value of the current high less the previous close; and the absolute value of the current low less the previous close
 def tr(data):
     data['previous_close'] = data['close'].shift(1)
     data['high-low'] = abs(data['high'] - data['low'])
@@ -55,7 +103,7 @@ def tr(data):
     tr = data[['high-low','high-pc','low-pc']].max(axis=1)
     return tr
 
-#TR rolling average
+# tr rolling average
 def atr(data, period):
     data['tr'] = tr(data)
     atr = data['tr'].rolling(period).mean()
@@ -78,111 +126,305 @@ def supertrend(df, period = 7, atr_multiplier = volatility):
             df['in_uptrend'][current] = df['in_uptrend'][previous]
             if (df['in_uptrend'][current]) and (df['lowerband'][current] < df['lowerband'][previous]):
                 df['lowerband'][current] = df['lowerband'][previous]
-            if not df['in_uptrend'][current] and df['upperband'][current]>df['upperband'][previous]:
+            if not df['in_uptrend'][current] and df['upperband'][current] > df['upperband'][previous]:
                 df['upperband'][current] = df['upperband'][previous]
     return df
 
-# Analysis & decision making. This part could be extracted out into it's own class.
+# analysis & decision making. This part could be extracted out into it's own class.
 def check_buy_sell_signals(df):
     
     # Establish bot parameters
-    global in_position,order_size,ticker,timeframe,min_sell_price,markup,prev_purch_price,max_loss
-    print("Calculating", ticker ,"data...")
-    print(df.tail(3)[['timestamp','close','low','in_uptrend']])
-    
+    global in_position, ticker, timeframe, min_sell_price, max_loss, min_gain, order_size
+    print(f"\nCalculating {ticker} data...")
+    print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
+        
     # extract last row for df
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
+    
+    # most recent 'full' candlestick - ohlc
+    open_price = df.reset_index(drop=True)['open'][0]
+    high_price = df.reset_index(drop=True)['high'][0]
+    low_price = df.reset_index(drop=True)['low'][0]
+    close_price = df.reset_index(drop=True)['close'][0]
+    
+    # i wanted to create a separate frame of reference from a mini-1m timeframe
+    # this might be able to calculate a downtrend during an immediate peak_sell event
+    # thus allowing for more conditions be met
+    bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
+    df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
+
+    # calculates most recent 1-minute trend
+    # used to decide "volatility_sell"
+    df_2 = supertrend(df_2)
+
+    # creates a mini_timeframe analysis of trend - if downtrend, then it's a sign of immediate bearish market
+    mini_downtrend = ~df_2[["in_uptrend"]].reset_index().in_uptrend[0]
+    mini_uptrend = df_2[["in_uptrend"]].reset_index().in_uptrend[0]
+
+    # {start of peak & trough - analysis}
+
+    # i wanted to see if it's possible to catch a massive drop from which to sell
+    # so i took the highest low in df & current_low:
+    #max_low = df.max()['low'] * (1 - max_loss)
+
+    # an honest max_low
+    max_low = min_sell_price * (1 - max_loss)
+
+    # a sell point from peak could be identified when low price goes above max_low * (1 + max_loss): 
+    #peak_sell = max_low * (1 + max_loss) < low_price
+
+    # or  a sell point from peak could be identified when low_price goes above max_low
+    peak_sell = max_low < low_price
+
+    # prints data
+    print(f"\nLow price: {low_price}, \tMax low: {max_low}")
+    print(f"Close price:: {close_price}, \tPeak breached (downtrend-sell): {peak_sell}")
+
+    # a sell point from trough could be identified when low price goes above min_sell_price(1 + min_gain): 
+    trough_sell = min_sell_price * (1 + min_gain) < low_price
+
+    # check if min_sell_price < low_price - which would thus execute a sell
+    print(f"High price: {high_price}, \tTrough breached (downtrend-sell): {trough_sell}")
+
+    print(f"\nMinimum sell price: {min_sell_price}")
+    # {end of peak & trough - analysis}
+
+    ## {near-real-time volatility analysis} ##
+    # another sell variable can be identified if trend in 1m timeframe changes
+    # if mini_downtrend is identified, sophie trigger sells (see mini_downtrend above)
+    if mini_downtrend and (min_sell_price * (1 + min_gain) < low_price):
+        volatility_sell = True
+    else:
+        volatility_sell = False
+
+    print(f"\nMini-timeframe downtrend identified - selling point: {volatility_sell}")
+    print(f"Mini-timeframe uptrend identified - buying point: {not in_position and not mini_downtrend}")
+    ## {end of near-real-time volatility analysis} ##
+
+
+    # this part is only applicable to tradeable-user
+    # here we consider conditions set above (peak_sell, trough_sell, & volatility_sell), as well as, 
+    # other conditions in an uptrend for which we could execute an order
+
+    # sells during a "1m timeframe" uptrend, when volitile_sell is triggered, 
+    #and also respecting the above trough & peak selling conditions
+    if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+
+        # under special circumstances, selling points can be found as stated below:
+        if in_position and (min_sell_price * (1 + min_gain) < low_price) and (volatility_sell or peak_sell or trough_sell):
+
+            # SELL - send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+            time.sleep(2)
+            print("\n Unless... it's actually a volitile mini-peakage. Oh! no | (• ◡•)|\n ......... Let's catch the next uphill.")
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            # just catching how many i caught
+            quant = float(order['info']['executedQty'])
+
+            # notes sale data
+            min_sell_price = float(order['trades'][0]['info']['price'])
+            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")     
+
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+
+            # we are no longer in_position
+            in_position = False
+
+            # reduces order size to mitigate Insufficient Funds error
+            order_size = order_size*(1-0.05)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.85:
+                order_size = og_size
+            else:
+                pass
+
+        # buys when it finds an immediate uptrend opportunity
+        # also forces in_position = True, which can be very nice 
+        # during positive trends/negative trends alike
+        elif not in_position and not mini_downtrend:
+            # BUY 
+            # send binance buy order
+            order = exchange.create_market_buy_order(f'{ticker}', order_size)
+
+            # i really should just output this as a dataframe()
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            # just catching how many i caught
+            quant = float(order['info']['executedQty'])
+
+            # replaces min_sell_price by purchase_price
+            min_sell_price = float(order['trades'][0]['info']['price'])
+
+            # we are now in_position
+            in_position = True
+            print(f"Purchased @ ${min_sell_price:n},for ${min_sell_price * quant:n}")   
+
+    # check for downtrend - if in_uptrend goes from True to False
+    if (df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]):
+        
+        # only sells if price is greater than 
+        #(min_sell_price)*(markup)*(max_loss) or peak_sell = True or volatility_sell = True
+        if in_position and (trough_sell or peak_sell):
+            print("\nPotential trough/peak sell-off.")
+            # SELL
+            # send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            # just catching how many i caught
+            quant = float(order['info']['executedQty'])
+
+            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")        
+
+            # we are no longer in_position
+            in_position = False
+
+            # reduces order size to mitigate Insufficient Funds error
+            order_size = order_size*(1-0.1)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.95:
+                order_size = og_size
+            else:
+                pass
+
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+
+        # i just can't help with these lol
+        elif in_position and not (trough_sell or peak_sell):
+            print("Currently safe from trough/peak selling points.")
+
+
+    # for the tradeable-user if we are in an uptrend & low_price stays above our min_sell, 
+    # the bot will sell when trough_sell or peak_sell are triggered
+    if (df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index] and min_sell_price * (1 + min_gain) < low_price):
+
+
+        # only sells if price is greater than (min_sell_price)*(markup)*(max_loss) 
+        #or peak_sell = True or volatility_sell = True
+        if in_position and (trough_sell or peak_sell):
+
+            # SELL
+            # send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            # just catching how many i caught
+            quant = float(order['info']['executedQty'])
+
+            print(f"Sold @ ${min_sell_price:n}, for ${sell_price * quant:n}")         
+
+            # we are no longer in_position
+            in_position = False
+
+            # reduces order size to mitigate Insufficient Funds error
+            order_size = order_size*(1-0.1)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.85:
+                order_size = og_size
+            else:
+                pass
+
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
     # check for uptrend - if in_uptrend goes from False to True
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
-        print("Changed to uptrend - Buy.")
-        
+
+        print("\nChanged to uptrend! | (• ◡•)| Mathematical!")
+
         # enter position when in_uptrend True
         if not in_position:
-            
-            # send binance buy order
+
+            # BUY -  send binance buy order
             order = exchange.create_market_buy_order(f'{ticker}', order_size)
-            
-            print('\nStatus:' + order['info']['status'],
-                  'Price:' + order['trades'][0]['info']['price'],
-                  'Quantity:' + order['info']['executedQty'],
-                  'Type:' + order['info']['side'])
-            
-            # holding onto this in order to ensure bot only executes above value(1-max_loss)
+
+            # i really should just output this as a dataframe()
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            # just catching how many i caught
+            quant = float(order['info']['executedQty'])
+
+            # replaces min_sell_price by purchase_price
             min_sell_price = float(order['trades'][0]['info']['price'])
-            # i really just did a second one until i can figure out the fetch_order_by_id() fucntion.
-            prev_purch_price = float(order['trades'][0]['info']['price'])
-            
+
             # we are now in_position
             in_position = True
-            print("Purchased @ $",str(prev_purch_price))
-        else:
-            
-            # otherwise 
-            print("Already in trading position.")
-            if prev_purch_price == min_sell_price:
-                pass
-            else:
-                print("Previous purchase price: ", prev_purch_price)
-    
-    # check for downtrend - if in_uptrend goes from True to False
-    if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
-        print("Changed to downtrend - Sell.")
-        
-        # current low price = df[-1:].reset_index(drop=True)['low'][0]
-        price = df[-1:].reset_index(drop=True)['low'][0]
-        
-        # only sells if price is greater than (min_sell_price)*(markup)*(max_loss)
-        if in_position and (min_sell_price*(1+max_loss)<price or prev_purch_price*(markup)<price):
-            
-            # send binance sell order
-            order = exchange.create_market_sell_order(f'{ticker}',order_size)
-            
-            # i really should just output this as a dataframe()
-            print('Status:' + order['info']['status'],
-                  'Price:' + order['trades'][0]['info']['price'],
-                  'Quantity:' + order['info']['executedQty'],
-                  'Type:' + order['info']['side'])
-            
-            # we are no longer in_position
-            in_position = False
-            
-            # reduces order size to mitigate Insufficient Funds error
-            order_size = order_size*(1-0.1)
-            
-            print("Loss/gain:",str(float(prev_purch_price)/float(order['trades'][0]['info']['price'])-1))
-        else:
-            print("Did not find an opportunity to sell, no task.")  
 
+            print(f"Purchased @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")       
+
+        else:
+            print(f"This could be a GREAT time to increase your position in {tick}, boom-shaka! ┌( ಠ_ಠ)┘ ")
+
+############################# 
+# do it... just do it
 def run_bot():
-    print("\n\n",datetime.now(tzlocal()).isoformat())
-    print("In position:", in_position,"\tTimeframe:",timeframe,"\n")
+    print()
+    print("##~##  ┌( ಠ_ಠ)┘  ##~##")
+    print(datetime.now(tzlocal()).isoformat())
+
+    # hi
+    print(f"Generating market indications for {name}.")
     
     # pulls in df to be used for calculations
-    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=50)
-    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(None)
-    
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=42)
+    df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
+        
+    # application of supertrend formula
     supertrend_data = supertrend(df)
+    
+    # decides & executes orders
     check_buy_sell_signals(supertrend_data)
     
+    # determined initially by tradeable-user
+    print(f"\nIn position: {in_position}\nTimeframe: {timeframe}\n")
+
     # used to get balance of ticker. For future use; allow order_size to be dynamic variable.
     bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
     bal['free'] = pd.to_numeric(bal['free'])
-    bal = bal[bal.free != 0].drop(columns='locked').reset_index(drop=True)
-    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop=True).free[0]
-    
+    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
+    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
+
     # printouts 
-    print("\nBalance: $",bal*bars[-1][1],"\tPosition:",bal)
-    print("Minimum sell price:",min_sell_price*(1+max_loss),", Order size:",order_size)
-    print("User:",name,"Markup:",markup,"%","\tVolatility:",volatility)
-    print("Max loss: ",max_loss,"%")
+    print(f"Balance:${bal * bars[-1][1]:n},\tPosition: {bal:n}")
+    print(f"Order size: {order_size},\tVolatility: {volatility}")
+    print(f"Min gain: {min_gain},\t\tMax loss:{max_loss}")
 
 """
 Run Bot, To the Moon
 """
 schedule.every(randint(a,b)).seconds.do(run_bot)
-while True:
+
+# variable assigned to exercising the bot
+bot = True
+while bot:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(0)
+#NOTES
+#############################

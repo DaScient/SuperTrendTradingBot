@@ -6,6 +6,8 @@ from random import randint
 from random import seed
 import pandas as pd
 import numpy as np
+from rich import print, pretty
+pretty.install()
 
 # login
 ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
@@ -13,7 +15,7 @@ ccxt.binanceus({ 'options':{ 'adjustForTimeDifference':True}})
 # {random key generator}
 # for reference see config.py
 value = randint(2,199)
-
+print(f"randint: {value}\n\n...")
 if 1 < value < 25:
     key = config.BINANCE_KEY_v7
     secret = config.BINANCE_SECRET_v7
@@ -67,27 +69,24 @@ min_gain = float(input("Min gain: %"))/100
 if timeframe == "1m":
     a = 55
     b = 60
-    volatility = 0.4545454
     
 elif timeframe == "5m":
     a = 275
     b = 300
-    volatility = 0.8545454
     
 elif timeframe == "15m":
     a = 850
     b = 900
     
-    volatility = 1.3545454
 elif timeframe == "30m":
     a = 1775
     b = 1800
-    volatility = 1.4545454
     
 elif timeframe == "1h":
     a = 3575
     b = 3600
-    volatility = 1.6545454
+
+volatility = 0.54545454
 
 print(f"Loading...\nPlease allow for {timeframe} until initial results are printed.")
 
@@ -150,7 +149,7 @@ def check_buy_sell_signals(df):
     # this might be able to calculate a downtrend during an immediate peak_sell event
     # thus allowing for more conditions be met
     bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=7)
-    df_2 = pd.DataFrame(bars_2, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
 
     # calculates most recent 1-minute trend
@@ -168,7 +167,7 @@ def check_buy_sell_signals(df):
     #max_low = df.max()['low'] * (1 - max_loss)
 
     # an honest max_low
-    max_low = min_sell_price * (1 - max_loss)
+    max_low = min_sell_price * (1 + max_loss)
 
     # a sell point from peak could be identified when low price goes above max_low * (1 + max_loss): 
     #peak_sell = max_low * (1 + max_loss) < low_price
@@ -227,8 +226,8 @@ def check_buy_sell_signals(df):
             quant = float(order['info']['executedQty'])
 
             # notes sale data
-            sell_price = float(order['trades'][0]['info']['price'])
-            print(f"Sold @ ${min_sell_price:n}, for ${sell_price * quant:n}")     
+            min_sell_price = float(order['trades'][0]['info']['price'])
+            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")     
 
             # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
@@ -288,7 +287,7 @@ def check_buy_sell_signals(df):
             # just catching how many i caught
             quant = float(order['info']['executedQty'])
 
-            print(f"Sold @ ${min_sell_price:n}, for ${sell_price * quant:n}")        
+            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")        
 
             # we are no longer in_position
             in_position = False
@@ -331,7 +330,7 @@ def check_buy_sell_signals(df):
             # just catching how many i caught
             quant = float(order['info']['executedQty'])
 
-            print(f"Sold @ ${min_sell_price:n}, for ${sell_price * quant:n}")         
+            print(f"Sold @ ${min_sell_price:n}, for ${min_sell_price * quant:n}")         
 
             # we are no longer in_position
             in_position = False
@@ -391,7 +390,7 @@ def run_bot():
     
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=42)
-    df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
         
     # application of supertrend formula
