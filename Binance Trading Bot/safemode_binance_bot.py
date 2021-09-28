@@ -73,14 +73,17 @@ if not in_position:
 else: # it's good to have a higher min_sell_price value
     min_sell_price = float(input("Minimum sell price: $"))
 
-max_loss = 0.05/100 # 1-float(input("Enter max loss: ")/100
+max_loss = 2/100# 1-float(input("Enter max loss (ex: 3.4%): %")/100
 
 # it's not a bad idea to let this be higher
 # the longer the bot will wait to sell
-min_gain = 0.85/100 # float(input("Min gain: %"))/100
+min_gain = 0.85/100 # float(input("Min gain (ex: 0.85%): %"))/100
 
 # safemode on
 safe = ast.literal_eval(input("Safemode on? - True/False: ").capitalize())
+
+# stopp-loss
+stop_loss = ast.literal_eval(input("Activate stop-loss sell? - True/False: ").capitalize())
 
 # schedule randomizer
 if timeframe == "1m":
@@ -106,7 +109,8 @@ elif timeframe == "1h":
 period = 1 #int(input("Enter the rolling average period (7 - 42): "))
 volatility = 0.005050608302615407 # initial temp volatility
 
-print(f"Loading...\nPlease allow for {timeframe} until initial results are printed.")
+print(f"\nLoading...\nPlease allow for {timeframe} until initial results are printed.")
+print(f"\nProject begins now @ {datetime.now(tzlocal())}")
 
 # supertrend
 def tr(data):
@@ -186,10 +190,11 @@ def check_buy_sell_signals(df):
     unsafe_sell = low_price_1m <= min_sell_price * (1 - max_loss)
 
     # prints most recent full 1m data
-    print(f"\nOpen: {open_price_1m}\tMinimum sell price: {min_sell_price}")
-    print(f"High: {high_price_1m}\tMax low: {max_low}")
-    print(f"Low: {low_price_1m}\tTimeframe: {timeframe}")
-    print(f"Close: {close_price_1m}\tSafe sell: {safe_sell}")
+    print(f"\nOpen: {open_price_1m}\t\tMinimum sell price: {min_sell_price}")
+    print(f"High: {high_price_1m}\t\tMax low: {max_low}")
+    print(f"Low: {low_price_1m}\t\tTimeframe: {timeframe}")
+    print(f"Close: {close_price_1m}\t\tSafe sell: {safe_sell}")
+    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tBreached: {unsafe_sell}")
 
     # goes to downtrend
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
@@ -221,7 +226,7 @@ def check_buy_sell_signals(df):
         
         if autopilot == True and safe == False and in_position and not safe_sell:
             
-            print("Executing autopilot downtrend sell | (• ◡•)|")
+            print("Executing autopilot downtrend sell | (• _•)|")
 
             # SELL
             # send binance sell order
@@ -251,7 +256,7 @@ def check_buy_sell_signals(df):
             print("\nSafemode on, did not execute autopilot downtrend sell | (• ◡•)|")
 
         
-        if autopilot == False and in_position and not safe_sell:
+        if autopilot == False and safe == True and in_position and not safe_sell:
             execute = input("Execute un-profitable sell? (y/n): ")
 
             if execute == "Yes" or "Y" or "y":
@@ -286,8 +291,6 @@ def check_buy_sell_signals(df):
             if execute == "No" or "N" or "n":
                 print("No sell.")
 
-        else:
-            pass
 
     # goes to uptrend
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
@@ -322,17 +325,80 @@ def check_buy_sell_signals(df):
             min_sell_price = float(order['trades'][0]['info']['price']) * (1 + min_gain)
         else:
             print(f"\nThis is a mathematical opportunity to increase your position in {tick}, boom-shaka! ┌( ಠ_ಠ)┘ ")    
+    
+    # stop-loss
+    last_two = not df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]
+    the_one_before_that = not df['in_uptrend'][len(df.index) - 3]
+    
+    if last_two and the_one_before_that: # are not in_uptrend
+                                              # low_price_1m <= min_sell_price * (1 - max_loss)
+        if autopilot == True and safe == True and stop_loss == True and in_position and unsafe_sell:
             
+            print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
+
+            # SELL
+            # send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            quant = float(order['info']['executedQty'])
+            min_sell_price = float(order['trades'][0]['info']['price'])
+
+            print(f"Sold @ ${min_sell_price:n} for ${min_sell_price * quant:n}")        
+
+            in_position = False
+
+            order_size = order_size*(1-0.05)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.85:
+                order_size = og_size
+
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+        
+        if autopilot == True and safe == True and stop_loss == False and in_position and unsafe_sell:
+            print("\nStopp-loss alert triggered, but sell action NOT activated. Still in position.\n")
+
+        if autopilot == True and safe == False and stop_loss == True and in_position and unsafe_sell:
+            print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
+
+            # SELL
+            # send binance sell order
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            quant = float(order['info']['executedQty'])
+            min_sell_price = float(order['trades'][0]['info']['price'])
+
+            print(f"Sold @ ${min_sell_price:n} for ${min_sell_price * quant:n}")        
+
+            in_position = False
+
+            order_size = order_size*(1-0.05)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.85:
+                order_size = og_size            
+# end
 
 ############################# 
 # do it... just do it
 def run_bot():
     print()
-    print("##~##  ┌( ಠ_ಠ)┘  ##~##")
+    print("\n##~####~####~##  ┌( ಠ_ಠ)┘  ##~####~####~##\n")
     print(datetime.now(tzlocal()).isoformat())
 
     # hi
-    print(f"Generating market indications for {name}.")
+    print(f"\nGenerating market indications for {name}.")
     
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=500)
@@ -353,8 +419,9 @@ def run_bot():
 
     # printouts
     print(f"\nIn position: {in_position}\tPosition: {bal:n}")
-    print(f"Balance:${(bal * bars[-1][1]):n}\tOrder size: {order_size}")
-    print(f"Min gain: {min_gain}\t Safemode: "{safe})
+    print(f"Balance: ${(bal * bars[-1][1]):n}\tOrder size: {order_size}")
+    print(f"Min gain: {min_gain}\tSafemode: {safe}")
+    print(f"Max loss: -{max_loss}%\tS-l active: {stop_loss}")
     
 """
 Run Bot, To the Moon
