@@ -63,7 +63,7 @@ tick = input("Insert ticker: ").upper()
 ticker = tick+"/"+input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
 timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
 in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
-autopilot = st.literal_eval(input("Autopilot on? - True/False: ").capitalize())
+autopilot = ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
 
 # determins if you want to enter a position
 if not in_position:
@@ -197,7 +197,7 @@ def check_buy_sell_signals(df):
     # most recent 'full' 1m-candles - ohlc for 
     bars_2 = exchange.fetch_ohlcv(f'{ticker}', timeframe="1m", limit=100)
     df_2 = pd.DataFrame(bars_2[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])    
-    df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")
+    df_2['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
     
     open_price_1m = df_2[-1:].reset_index(drop=True)['open'][0]
     high_price_1m = df_2[-1:].reset_index(drop=True)['high'][0]
@@ -429,7 +429,7 @@ def run_bot():
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=500)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize(tz = "America/Los_Angeles")#tz = "America/Los_Angeles")
+    df['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
         
     # application of supertrend formula
     supertrend_data = supertrend(df)
