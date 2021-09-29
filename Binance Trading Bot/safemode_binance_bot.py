@@ -231,9 +231,9 @@ def check_buy_sell_signals(df):
     # bot should execute sell order when peak == True even when df_prev & df_last in_uptrend.
     if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         
-        if in_position and safe_sell:
+        if in_position and peak and safe_sell:
             # SELL
-            print("Yo! Haha that's great we just reach a peakage (❍ᴥ❍ʋ) woah! ")
+            print("\nYo! Haha that's great we just reach a peakage (❍ᴥ❍ʋ) woah! ")
             print("\nI hear ya! Executing a profitable peakage sell order | (• ◡•)|")
 
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
