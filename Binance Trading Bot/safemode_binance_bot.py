@@ -429,7 +429,7 @@ def run_bot():
     # pulls in df to be used for calculations
     bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=500)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df_2['timestamp'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
         
     # application of supertrend formula
     supertrend_data = supertrend(df)
