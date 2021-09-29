@@ -62,22 +62,23 @@ name = input("Input a name: ")
 tick = input("Insert ticker: ").upper()
 ticker = tick+"/"+input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
 timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
-order_size = float(input("Order size in "+tick+": "))
-og_size = order_size
 in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
-autopilot = ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
+autopilot = st.literal_eval(input("Autopilot on? - True/False: ").capitalize())
 
 # determins if you want to enter a position
 if not in_position:
     min_sell_price = exchange.fetch_ohlcv("SHIB/USDT", timeframe="1m", limit=2)[-1][4]
-else: # it's good to have a higher min_sell_price value
-    min_sell_price = float(input("Minimum sell price: $"))
 
-max_loss = 2/100# 1-float(input("Enter max loss (ex: 3.4%): %")/100
+elif in_position: # it's good to have a higher min_sell_price value
+    min_sell_price = float(input("Minimum sell price: $"))
+    order_size = float(input("Order size in "+tick+": "))
+    og_size = order_size
+
+max_loss = 0.85/100 # 1-float(input("Enter max loss (ex: 0.85%): %")/100
 
 # it's not a bad idea to let this be higher
 # the longer the bot will wait to sell
-min_gain = 0.85/100 # float(input("Min gain (ex: 0.85%): %"))/100
+min_gain = 0.333/100 # float(input("Min gain (ex: 0.3333%): %"))/100
 
 # safemode on
 safe = ast.literal_eval(input("Safemode on? - True/False: ").capitalize())
@@ -151,7 +152,29 @@ def check_buy_sell_signals(df):
     global in_position, ticker, timeframe, min_sell_price, min_gain, order_size, max_loss
     print(f"\nCalculating {ticker} data...")
     print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
+    
+    # dynamic order_size
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=5)
+    bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
+    bal['free'] = pd.to_numeric(bal['free'])
+    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
+    
+    # get usdt balance really quick here
+    usdt = bal[bal.asset == 'USDT']['free'].reset_index()['free'][0]
+    
+    # get {ticker} balance here
+    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
+    
+    # re-establish order_size = 3/4 usdt balance divided by previous close_price
+    if in_position == False:
+        order_size = usdt * 0.75 / bars[-1][4]
 
+    # printouts
+    print(f"\nIn position: {in_position}\tPosition: {bal}")
+    print(f"Balance: ${(bal * bars[-1][4])}\tOrder size: {order_size}")
+    print(f"Min gain: +{min_gain}%\tSafemode: {safe}")
+    print(f"Max loss: -{max_loss}%\tS-l active: {stop_loss}")
+    
     # Measure Volatility#############################
     # calculate {timeframe} logarithmic return
     df['returns'] = (np.log(df.close /
@@ -161,6 +184,7 @@ def check_buy_sell_signals(df):
     volatility_avg = df["returns"].mean()
     print(f"\nVolatility: {volatility} Volatility avg: {volatility_avg}")
     #################################################
+    
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
     
@@ -223,6 +247,8 @@ def check_buy_sell_signals(df):
             # limits the size reduction from above
             if order_size < og_size * 0.95:
                 order_size = og_size
+            
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
         
         if autopilot == True and safe == False and in_position and not safe_sell:
             
@@ -362,7 +388,7 @@ def check_buy_sell_signals(df):
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
         
         if autopilot == True and safe == True and stop_loss == False and in_position and unsafe_sell:
-            print("\nStopp-loss alert triggered, but sell action NOT activated. Still in position.\n")
+            print("\nStop-loss alert triggered, but sell action NOT activated. Still in position.\n")
 
         if autopilot == True and safe == False and stop_loss == True and in_position and unsafe_sell:
             print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
@@ -410,19 +436,7 @@ def run_bot():
     
     # decides & executes orders
     check_buy_sell_signals(supertrend_data)
-    
-    # used to get balance of ticker. For future use; allow order_size to be dynamic variable.
-    bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
-    bal['free'] = pd.to_numeric(bal['free'])
-    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
-    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
-
-    # printouts
-    print(f"\nIn position: {in_position}\tPosition: {bal:n}")
-    print(f"Balance: ${(bal * bars[-1][1]):n}\tOrder size: {order_size}")
-    print(f"Min gain: {min_gain}\tSafemode: {safe}")
-    print(f"Max loss: -{max_loss}%\tS-l active: {stop_loss}")
-    
+        
 """
 Run Bot, To the Moon
 """
