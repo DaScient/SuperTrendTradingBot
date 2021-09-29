@@ -67,7 +67,9 @@ autopilot = ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
 
 # determins if you want to enter a position
 if not in_position:
-    min_sell_price = exchange.fetch_ohlcv("SHIB/USDT", timeframe="1m", limit=2)[-1][4]
+    min_sell_price = exchange.fetch_ohlcv(ticker, timeframe="1m", limit=2)[-1][4]
+    order_size = float(input("Order size in "+tick+": "))
+    og_size = order_size
 
 elif in_position: # it's good to have a higher min_sell_price value
     min_sell_price = float(input("Minimum sell price: $"))
@@ -235,6 +237,8 @@ def check_buy_sell_signals(df):
                   \nQuantity: {order['info']['executedQty']},\
                   \nType: {order['info']['side']}")
 
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+            
             quant = float(order['info']['executedQty'])
             min_sell_price = float(order['trades'][0]['info']['price'])
 
@@ -247,8 +251,6 @@ def check_buy_sell_signals(df):
             # limits the size reduction from above
             if order_size < og_size * 0.95:
                 order_size = og_size
-            
-            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
         
         if autopilot == True and safe == False and in_position and not safe_sell:
             
@@ -263,6 +265,8 @@ def check_buy_sell_signals(df):
                   \nQuantity: {order['info']['executedQty']},\
                   \nType: {order['info']['side']}")
 
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+            
             quant = float(order['info']['executedQty'])
             min_sell_price = float(order['trades'][0]['info']['price'])
 
@@ -274,8 +278,6 @@ def check_buy_sell_signals(df):
 
             if order_size < og_size * 0.85:
                 order_size = og_size
-
-            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
         if autopilot == True and safe == True and in_position and not safe_sell:
             
@@ -297,6 +299,9 @@ def check_buy_sell_signals(df):
                       \nPrice: {order['trades'][0]['info']['price']},\
                       \nQuantity: {order['info']['executedQty']},\
                       \nType: {order['info']['side']}")
+                
+                # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+                print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
                 quant = float(order['info']['executedQty'])
                 min_sell_price = float(order['trades'][0]['info']['price'])
@@ -310,9 +315,6 @@ def check_buy_sell_signals(df):
                 # limits the size reduction from above
                 if order_size < og_size * 0.95:
                     order_size = og_size
-
-                # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
-                print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
             if execute == "No" or "N" or "n":
                 print("No sell.")
@@ -371,6 +373,9 @@ def check_buy_sell_signals(df):
                   \nQuantity: {order['info']['executedQty']},\
                   \nType: {order['info']['side']}")
 
+            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+            
             quant = float(order['info']['executedQty'])
             min_sell_price = float(order['trades'][0]['info']['price'])
 
@@ -384,8 +389,7 @@ def check_buy_sell_signals(df):
             if order_size < og_size * 0.85:
                 order_size = og_size
 
-            # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
-            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+
         
         if autopilot == True and safe == True and stop_loss == False and in_position and unsafe_sell:
             print("\nStop-loss alert triggered, but sell action NOT activated. Still in position.\n")
@@ -440,7 +444,6 @@ def run_bot():
 """
 Run Bot, To the Moon
 """
-clear_output()
 schedule.every(randint(a,b)).seconds.do(run_bot)
 # variable assigned to exercising the bot
 bot = True
@@ -448,4 +451,19 @@ while bot:
     schedule.run_pending()
     time.sleep(0)
 #NOTES
-#############################
+##############################
+# #fetch account_balance:
+# #fetch tradeable balance
+#assets = []
+#for index,asset in acct.asset.items():
+#    #print(index,asset)
+#    try: 
+#        info = exchange.fetch_ohlcv(str(asset+'/USDT'), timeframe="1m", limit=1)
+#        assets.append({'asset' : asset, 'balance': acct.balance[index],'price': info[0][1],
+#                      'sugg_trade_amt': float(acct.balance[index]*info[0][1] * (0.85)/info[0][1])})
+#    except:
+#        pass
+#assets = pd.DataFrame(assets)
+#assets = assets[assets.sugg_trade_amt > 0.5]
+#assets
+##############################
