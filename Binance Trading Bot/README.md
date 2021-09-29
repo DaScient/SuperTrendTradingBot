@@ -6,7 +6,7 @@ To get started, clone this repository into an easy-to-find folder on your comput
 
 Before you go further, make sure to have conda installed on your system, as well as, the latest Python release. See the general README for more details. 
 
-Use the terminal, or your command prompt, to get into the cloned folder. Once in the proper directory, you can run python like so: ../Desktop/SuperTrendTradingBot/Binance_Trading_Bot/ >> python safemode_binance_bot.py
+Use the terminal, or your command prompt, to get into the cloned folder. Once in the proper directory, you can run python like so: ../SuperTrendTradingBot/Binance_Trading_Bot/ >> python safemode_binance_bot.py
 
 ## Our SuperTrend Nutshell :robot:
 
