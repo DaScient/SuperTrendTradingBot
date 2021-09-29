@@ -35,7 +35,7 @@ Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?r
 1. After login, go to the menu settings and find API MANAGEMENT.
 2. Create an API and follow approval directives.
 3. Save and KEEP ULTRA SAFE your api.key & api.secret (in a config.py, follow format.)
-4. Then go into your terminal, locate binance_bot.py, then execute by typing: >>python binance_bot.py 
+4. Then go into your terminal, locate safemode_binance_bot.py, then execute by typing: >>python safemode_binance_bot.py 
  
  ---
 
