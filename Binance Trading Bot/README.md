@@ -1,6 +1,6 @@
 # SuperTrendTradingBot
 
-## Introduction to Sophie - your very own personal asset trading bot :robot:
+## Introduction to Safemode-Enabled BinanceUS trading bot - your very own personal asset trading bot :robot:
 
 To get started, clone this repository into an easy-to-find folder on your computer. 
 
