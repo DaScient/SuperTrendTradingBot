@@ -76,7 +76,7 @@ elif in_position: # it's good to have a higher min_sell_price value
     order_size = float(input("Order size in "+tick+": "))
     og_size = order_size
 
-max_loss = 0.85/100 # 1-float(input("Enter max loss (ex: 0.85%): %")/100
+max_loss = 2.5/100 # 1-float(input("Enter max loss (ex: 2.5%): %")/100
 
 # it's not a bad idea to let this be higher
 # the longer the bot will wait to sell
@@ -222,6 +222,43 @@ def check_buy_sell_signals(df):
     print(f"Close: {close_price_1m}\t\tSafe sell: {safe_sell}")
     print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tBreached: {unsafe_sell}")
 
+    # {begin peak analysis}
+    # typically, peaks can be found when the high wick appears to be the highest point in your time window (ex. 500) note: this would be most effective when 500 <= timeframe. peak is found when current high_price_1m >= df.max()['high'], as shown:
+    #peak = df.max()['high'] <= high_price_1m
+    # or explicitly
+    peak = df.max()['high'] < high_price_1m
+
+    # bot should execute sell order when peak == True even when df_prev & df_last in_uptrend.
+    if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+        
+        if in_position and safe_sell:
+            # SELL
+            print("Yo! Haha that's great we just reach a peakage (❍ᴥ❍ʋ) woah! ")
+            print("\nI hear ya! Executing a profitable peakage sell order | (• ◡•)|")
+
+            order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+            print(f"\nStatus: {order['info']['status']},\
+                  \nPrice: {order['trades'][0]['info']['price']},\
+                  \nQuantity: {order['info']['executedQty']},\
+                  \nType: {order['info']['side']}")
+
+            print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+
+            quant = float(order['info']['executedQty'])
+            min_sell_price = float(order['trades'][0]['info']['price'])
+
+            print(f"Sold @ ${min_sell_price:n} for ${min_sell_price * quant:n}")        
+
+            in_position = False
+
+            order_size = order_size*(1-0.05)
+
+            # limits the size reduction from above
+            if order_size < og_size * 0.85:
+                order_size = og_size
+        # {end peak analysis}
+
     # goes to downtrend
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
 
@@ -246,10 +283,10 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.1)
+            order_size = order_size*(1-0.05)
 
             # limits the size reduction from above
-            if order_size < og_size * 0.95:
+            if order_size < og_size * 0.85:
                 order_size = og_size
         
         if autopilot == True and safe == False and in_position and not safe_sell:
@@ -274,7 +311,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.1)
+            order_size = order_size*(1-0.05)
 
             if order_size < og_size * 0.85:
                 order_size = og_size
@@ -310,10 +347,10 @@ def check_buy_sell_signals(df):
 
                 in_position = False
 
-                order_size = order_size*(1-0.1)
+                order_size = order_size*(1-0.05)
 
                 # limits the size reduction from above
-                if order_size < og_size * 0.95:
+                if order_size < og_size * 0.85:
                     order_size = og_size
 
             if execute == "No" or "N" or "n":
@@ -359,7 +396,34 @@ def check_buy_sell_signals(df):
     the_one_before_that = not df['in_uptrend'][len(df.index) - 3]
     
     if last_two and the_one_before_that: # are not in_uptrend
-                                              # low_price_1m <= min_sell_price * (1 - max_loss)
+        # safe sell
+        if autopilot == True and safe == True and stop_loss == True and in_position and safe_sell:
+                # SELL
+                print("\nExecuting a safe triple downtrend sell.")
+                order = exchange.create_market_sell_order(f'{ticker}',order_size)
+
+                print(f"\nStatus: {order['info']['status']},\
+                      \nPrice: {order['trades'][0]['info']['price']},\
+                      \nQuantity: {order['info']['executedQty']},\
+                      \nType: {order['info']['side']}")
+                
+                # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
+                print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
+
+                quant = float(order['info']['executedQty'])
+                min_sell_price = float(order['trades'][0]['info']['price'])
+
+                print(f"Sold @ ${min_sell_price:n} for ${min_sell_price * quant:n}")        
+
+                in_position = False
+
+                order_size = order_size*(1-0.05)
+
+                # limits the size reduction from above
+                if order_size < og_size * 0.85:
+                    order_size = og_size
+        
+                                                # low_price_1m <= min_sell_price * (1 - max_loss)
         if autopilot == True and safe == True and stop_loss == True and in_position and unsafe_sell:
             
             print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
@@ -389,8 +453,6 @@ def check_buy_sell_signals(df):
             if order_size < og_size * 0.85:
                 order_size = og_size
 
-
-        
         if autopilot == True and safe == True and stop_loss == False and in_position and unsafe_sell:
             print("\nStop-loss alert triggered, but sell action NOT activated. Still in position.\n")
 
