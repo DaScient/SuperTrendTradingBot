@@ -177,8 +177,8 @@ def check_buy_sell_signals(df):
     # printouts
     print(f"\nIn position: {in_position}\tPosition: {bal}")
     print(f"Balance: ${(bal * bars[-1][4])}\tOrder size: {order_size}")
-    print(f"Min gain: +{min_gain}%\tSafemode: {safe}")
-    print(f"Max loss: -{max_loss}%\tS-l active: {stop_loss}")
+    print(f"Min gain: +{min_gain * 100}%\tSafemode: {safe}")
+    print(f"Max loss: -{max_loss * 100}%\tS-l active: {stop_loss}")
     # Measure Volatility#############################
     # calculate {timeframe} logarithmic return
     df['returns'] = (np.log(df.close /
@@ -222,8 +222,8 @@ def check_buy_sell_signals(df):
     print(f"\nOpen: {open_price_1m}\t\tMinimum sell price: {min_sell_price}")
     print(f"High: {high_price_1m}\t\tMax low: {max_low}")
     print(f"Low: {low_price_1m}\t\tTimeframe: {timeframe}")
-    print(f"Close: {close_price_1m}\t\tSafe sell: {safe_sell}")
-    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tS-l breached ({(close_price_1m / min_sell_price - 1) * 100}%): {unsafe_sell}")
+    print(f"Close: {close_price_1m}\tSafe sell: {safe_sell}")
+    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tS-l breached {(close_price_1m / min_sell_price - 1) * 100}%: {unsafe_sell}")
 
     # {~peak analysis~}
     # typically, peaks can be found when the high wick appears to be the highest point in your time window (ex. 500) note: this would be most effective when 500 <= timeframe. peak is found when current close_price_1m >= df.max()['high'], as shown:
