@@ -60,7 +60,8 @@ exchange = ccxt.binanceus({"apiKey": key, "secret": secret, "enableRateLimit": T
 # set params
 name = input("Input a name: ")
 tick = input("Insert ticker: ").upper()
-ticker = tick+"/"+input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
+deno = input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
+ticker = tick+"/"+ deno
 timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
 in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
 autopilot = ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
@@ -76,11 +77,12 @@ elif in_position: # it's good to have a higher min_sell_price value
     order_size = float(input("Order size in "+tick+": "))
     og_size = order_size
 
-max_loss = 2.5/100 # 1-float(input("Enter max loss (ex: 2.5%): %")/100
+# it's more profitable to activate LESS stop-loss sells by increasing tolerance
+max_loss = float(input("Enter max loss (ex: 2.5%): %"))/100
 
-# it's not a bad idea to let this be higher
+# it's not a bad idea to let this be higher; smaller amounts mean frequent trades
 # the longer the bot will wait to sell
-min_gain = 0.333/100 # float(input("Min gain (ex: 0.3333%): %"))/100
+min_gain = float(input("Min gain (ex: 1.5%): %"))/100
 
 # safemode on
 safe = ast.literal_eval(input("Safemode on? - True/False: ").capitalize())
@@ -161,22 +163,22 @@ def check_buy_sell_signals(df):
     bal['free'] = pd.to_numeric(bal['free'])
     bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
     
-    # get usdt balance really quick here
-    usdt = bal[bal.asset == 'USDT']['free'].reset_index()['free'][0]
+    # get deno balance really quick here
+    usdt = bal[bal.asset == deno]['free'].reset_index()['free'][0]
     
     # get {ticker} balance here
     bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
     
     # re-establish order_size = 3/4 usdt balance divided by previous close_price
-    if in_position == False:
-        order_size = usdt * 0.75 / bars[-1][4]
+    # toggle on/off:
+    #if in_position == False:
+    #    order_size = usdt * 0.25 / bars[-1][4]
 
     # printouts
     print(f"\nIn position: {in_position}\tPosition: {bal}")
     print(f"Balance: ${(bal * bars[-1][4])}\tOrder size: {order_size}")
     print(f"Min gain: +{min_gain}%\tSafemode: {safe}")
     print(f"Max loss: -{max_loss}%\tS-l active: {stop_loss}")
-    
     # Measure Volatility#############################
     # calculate {timeframe} logarithmic return
     df['returns'] = (np.log(df.close /
@@ -189,6 +191,7 @@ def check_buy_sell_signals(df):
     
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
+    triple_previous_row_index = previous_row_index - 1
     
     # most recent 'full' {timeframe} candles - ohlc for 
     open_price = df[-1:].reset_index(drop=True)['open'][0]
@@ -220,28 +223,24 @@ def check_buy_sell_signals(df):
     print(f"High: {high_price_1m}\t\tMax low: {max_low}")
     print(f"Low: {low_price_1m}\t\tTimeframe: {timeframe}")
     print(f"Close: {close_price_1m}\t\tSafe sell: {safe_sell}")
-    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tBreached: {unsafe_sell}")
+    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tS-l breached ({(close_price_1m / min_sell_price - 1) * 100}%): {unsafe_sell}")
 
-    # {begin peak analysis}
-    # typically, peaks can be found when the high wick appears to be the highest point in your time window (ex. 500) note: this would be most effective when 500 <= timeframe. peak is found when current high_price_1m >= df.max()['high'], as shown:
-    #peak = df.max()['high'] <= high_price_1m
+    # {~peak analysis~}
+    # typically, peaks can be found when the high wick appears to be the highest point in your time window (ex. 500) note: this would be most effective when 500 <= timeframe. peak is found when current close_price_1m >= df.max()['high'], as shown:
+    #peak = df.max()['high'] <= close_price_1m
     # or explicitly
-    peak = df.max()['high'] < high_price_1m
-
+    peak = df.max()['high'] < close_price_1m
+    print(f"(500)-window peak sell @: {df.max()['high']}\tPeak reached: {peak}")
     # bot should execute sell order when peak == True even when df_prev & df_last in_uptrend.
-    if df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+    # currently, it will identify a peak when low_price >= df.max() * (1 + 11%)
+    if df['in_uptrend'][triple_previous_row_index] and df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
         
-        if in_position and peak and safe_sell:
+        if in_position and peak and (df.max()['high'] <= low_price_1m):
             # SELL
             print("\nYo! Haha that's great we just reach a peakage (❍ᴥ❍ʋ) woah! ")
             print("\nI hear ya! Executing a profitable peakage sell order | (• ◡•)|")
 
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
 
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
@@ -253,9 +252,14 @@ def check_buy_sell_signals(df):
             in_position = False
 
             order_size = order_size*(1-0.05)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+            print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
             # limits the size reduction from above
-            if order_size < og_size * 0.85:
+            if order_size < og_size * 0.93:
                 order_size = og_size
         # {end peak analysis}
 
@@ -264,15 +268,10 @@ def check_buy_sell_signals(df):
 
         if in_position and safe_sell:
 
-            print("Executing a profitable downtrend sell | (• ◡•)|")
+            print("\nExecuting a profitable downtrend sell | (• ◡•)|")
             # SELL
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
 
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
             
@@ -284,23 +283,24 @@ def check_buy_sell_signals(df):
             in_position = False
 
             order_size = order_size*(1-0.05)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+
+            print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
             # limits the size reduction from above
-            if order_size < og_size * 0.85:
+            if order_size < og_size * 0.93:
                 order_size = og_size
         
         if autopilot == True and safe == False and in_position and not safe_sell:
             
-            print("Executing autopilot downtrend sell | (• _•)|")
+            print("\nExecuting autopilot downtrend sell | (• _•)|")
 
             # SELL
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
 
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
             
@@ -312,8 +312,14 @@ def check_buy_sell_signals(df):
             in_position = False
 
             order_size = order_size*(1-0.05)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
 
-            if order_size < og_size * 0.85:
+            print(order)
+
+            if order_size < og_size * 0.93:
                 order_size = og_size
 
         if autopilot == True and safe == True and in_position and not safe_sell:
@@ -331,11 +337,6 @@ def check_buy_sell_signals(df):
                 # SELL
                 # send binance sell order
                 order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-                print(f"\nStatus: {order['info']['status']},\
-                      \nPrice: {order['trades'][0]['info']['price']},\
-                      \nQuantity: {order['info']['executedQty']},\
-                      \nType: {order['info']['side']}")
                 
                 # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
                 print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
@@ -348,9 +349,15 @@ def check_buy_sell_signals(df):
                 in_position = False
 
                 order_size = order_size*(1-0.05)
+                
+                # pd.DataFrame(order)
+                order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+                order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+
+                print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
                 # limits the size reduction from above
-                if order_size < og_size * 0.85:
+                if order_size < og_size * 0.93:
                     order_size = og_size
 
             if execute == "No" or "N" or "n":
@@ -358,7 +365,7 @@ def check_buy_sell_signals(df):
 
 
     # goes to uptrend
-    if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+    if not df['in_uptrend'][triple_previous_row_index] and not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
 
         print("\nChanged to uptrend! | (• ◡•)| Mathematical!")
 
@@ -368,13 +375,7 @@ def check_buy_sell_signals(df):
 
             # BUY
             order = exchange.create_market_buy_order(f'{ticker}', order_size)
-
-            # i really should just output this as a dataframe()
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
-
+            
             # just catching how many i caught
             quant = float(order['info']['executedQty'])
 
@@ -388,25 +389,24 @@ def check_buy_sell_signals(df):
             
             # reset min_sell_price to reflect 1 + min_gain for profit
             min_sell_price = float(order['trades'][0]['info']['price']) * (1 + min_gain)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+
+            print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
+            
         else:
             print(f"\nThis is a mathematical opportunity to increase your position in {tick}, boom-shaka! ┌( ಠ_ಠ)┘ ")    
     
     # stop-loss
-    last_two = not df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]
-    the_one_before_that = not df['in_uptrend'][len(df.index) - 3]
-    
-    if last_two and the_one_before_that: # are not in_uptrend
+    if not df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
         # safe sell
         if autopilot == True and safe == True and stop_loss == True and in_position and safe_sell:
                 # SELL
-                print("\nExecuting a safe triple downtrend sell.")
+                print("\nExecuting a profitable triple-downtrend sell.")
                 order = exchange.create_market_sell_order(f'{ticker}',order_size)
 
-                print(f"\nStatus: {order['info']['status']},\
-                      \nPrice: {order['trades'][0]['info']['price']},\
-                      \nQuantity: {order['info']['executedQty']},\
-                      \nType: {order['info']['side']}")
-                
                 # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
                 print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
 
@@ -418,24 +418,25 @@ def check_buy_sell_signals(df):
                 in_position = False
 
                 order_size = order_size*(1-0.05)
+                
+                # pd.DataFrame(order)
+                order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+                order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+                
+                print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
                 # limits the size reduction from above
-                if order_size < og_size * 0.85:
+                if order_size < og_size * 0.93:
                     order_size = og_size
         
-                                                # low_price_1m <= min_sell_price * (1 - max_loss)
+        # unsafe sell: low_price_1m <= min_sell_price * (1 - max_loss)
         if autopilot == True and safe == True and stop_loss == True and in_position and unsafe_sell:
             
-            print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
+            print(f"\nExecuting an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
 
             # SELL
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
 
             # calculates loss/gain = 1 - (last_purchase_price/sold_purchase_price)
             print(f"Loss/gain: {1-float(min_sell_price)/float(order['trades'][0]['info']['price'])}")
@@ -448,26 +449,27 @@ def check_buy_sell_signals(df):
             in_position = False
 
             order_size = order_size*(1-0.05)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+
+            print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
             # limits the size reduction from above
-            if order_size < og_size * 0.85:
+            if order_size < og_size * 0.93:
                 order_size = og_size
 
         if autopilot == True and safe == True and stop_loss == False and in_position and unsafe_sell:
             print("\nStop-loss alert triggered, but sell action NOT activated. Still in position.\n")
 
         if autopilot == True and safe == False and stop_loss == True and in_position and unsafe_sell:
-            print(f"Executing an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
+            print(f"\nExecuting an un-profitable sell | (• ◡•)|, stop-loss triggered @ -{max_loss}%")
 
             # SELL
             # send binance sell order
             order = exchange.create_market_sell_order(f'{ticker}',order_size)
-
-            print(f"\nStatus: {order['info']['status']},\
-                  \nPrice: {order['trades'][0]['info']['price']},\
-                  \nQuantity: {order['info']['executedQty']},\
-                  \nType: {order['info']['side']}")
-
+            
             quant = float(order['info']['executedQty'])
             min_sell_price = float(order['trades'][0]['info']['price'])
 
@@ -476,9 +478,15 @@ def check_buy_sell_signals(df):
             in_position = False
 
             order_size = order_size*(1-0.05)
+            
+            # pd.DataFrame(order)
+            order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
+            order['transactTime'] = pd.to_datetime(order['transactTime'], unit='ms', utc=True).dt.tz_convert('US/Pacific')
+
+            print(order[['symbol','transactTime','executedQty','price_y','status','type','side','commission','commissionAsset']])
 
             # limits the size reduction from above
-            if order_size < og_size * 0.85:
+            if order_size < og_size * 0.93:
                 order_size = og_size            
 # end
 
