@@ -9,6 +9,12 @@ Find value in our project? Want to help us expand or contribute to code? Even if
 
 ---
 
+### SuperTrend - Trends! :computer:
+
+This special feature allows users to fully, or partially, imitate other user's portfolio allocations. The Trends enhancement allows users to become more exposed and informed of the SuperTrends trading community. Users can search openly for groups and strategies that they feel are more suitable for their level of risk. Users can also create, share, and update their own portfolios to the community as well, meaning whatever new allocations the group leader decides will change everyone's portfolios to reflect it! You can let your imagination wander. 
+
+---
+
 ## The Bot - Our SuperTrend Nutshell :robot:
 
 The purpose of this repository is to document the development of our very first trading bot. The bot will be broken out into 3 broad classes:
@@ -46,12 +52,6 @@ Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?r
 This class will consist of a CCXT connection into Binance.US WebSocket interface that will feed live cryptocurrency data in the form of candle sticks; Open, High, Low, Close (OHLC).
 
 We also apply rolling averages, upper/lower Bollinger bands, and binary variables that evaluates uptrend/downtrend intervals. 
-
----
-
-### SuperTrend - Trends! :computer:
-
-This special feature allows users to fully, or partially, imitate other user's portfolio allocations. The Trends enhancement allows users to become more exposed and informed of the SuperTrends trading community. Users can search openly for groups and strategies that they feel are more suitable for their level of risk. Users can also create, share, and update their own portfolios to the community as well, meaning whatever new allocations the group leader decides will change everyone's portfolios to reflect it! You can let your imagination wander. 
 
 ---
 
