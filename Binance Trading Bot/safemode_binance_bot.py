@@ -63,59 +63,70 @@ tick = input("Insert ticker: ").upper()
 deno = input("Enter denomination (examples: USD, USDT, BUSD, BTC): ").upper()
 ticker = tick+"/"+ deno
 timeframe = input("Candlestick intervals (1m,5m,15m,30m,1h,2h,6h,1d): ").capitalize()
-in_position = ast.literal_eval(input("Already in desired holding position? - True/False: ").capitalize())
-autopilot = ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
+in_position = ast.literal_eval(input("Already in desired position? - True/False: ").capitalize())
+autopilot = True # ast.literal_eval(input("Autopilot on? - True/False: ").capitalize())
+
+# dynamic order_size - redundance?
+bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=2)
+bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
+bal['free'] = pd.to_numeric(bal['free'])
+bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
+
+# get deno balance really quick here
+deno_bal = bal[bal.asset == deno]['free'].reset_index()['free'][0]
 
 # determins if you want to enter a position
 if not in_position:
-    min_sell_price = exchange.fetch_ohlcv(ticker, timeframe="1m", limit=2)[-1][4]
-    order_size = float(input("Order size in "+tick+": "))
+    min_sell_price = bars[-1][3] # current low_price
+    perc = float(input("Enter % of deno to be used for desired trading position: %"))/100
+    order_size = int(deno_bal * perc / bars[-1][1])
     og_size = order_size
 
 elif in_position: # it's good to have a higher min_sell_price value
-    min_sell_price = float(input("Minimum sell price: $"))
-    order_size = float(input("Order size in "+tick+": "))
+    min_sell_price = float(input("Previous purchase price: $"))
+    perc = float(input("Enter % of deno to be used for desired trading position: %"))/100
+    order_size = int(deno_bal * perc)
     og_size = order_size
 
 # it's more profitable to activate LESS stop-loss sells by increasing tolerance
-max_loss = float(input("Enter max loss (ex: 2.5%): %"))/100
+max_loss = 7.77/100 # float(input("Enter max loss (ex: 2.5%): %"))/100
 
 # it's not a bad idea to let this be higher; smaller amounts mean frequent trades
 # the longer the bot will wait to sell
-min_gain = float(input("Min gain (ex: 1.5%): %"))/100
+min_gain = 2.22/100 # float(input("Min gain (ex: 1.5%): %"))/100
 
 # safemode on
-safe = ast.literal_eval(input("Safemode on? - True/False: ").capitalize())
+safe = True # ast.literal_eval(input("Safemode on? - True/False: ").capitalize())
 
 # stopp-loss
-stop_loss = ast.literal_eval(input("Activate stop-loss sell? - True/False: ").capitalize())
+stop_loss = True # ast.literal_eval(input("Activate stop-loss sell? - True/False: ").capitalize())
 
 # schedule randomizer
 if timeframe == "1m":
     a = 55
-    b = 60
+    b = 65
     
 elif timeframe == "5m":
     a = 275
-    b = 300
+    b = 305
     
 elif timeframe == "15m":
     a = 850
-    b = 900
+    b = 905
     
 elif timeframe == "30m":
     a = 1775
-    b = 1800
+    b = 1805
     
 elif timeframe == "1h":
     a = 3575
-    b = 3600
+    b = 3605
 
-period = 1 #int(input("Enter the rolling average period (7 - 42): "))
+period = 1 # int(input("Enter the rolling average period (7 - 42): "))
 volatility = 0.005050608302615407 # initial temp volatility
 
 print(f"\nLoading...\nPlease allow for {timeframe} until initial results are printed.")
-print(f"\nProject begins now @ {datetime.now(tzlocal())}")
+print(f"\nProject started: {datetime.now(tzlocal())}")
 
 # supertrend
 def tr(data):
@@ -157,29 +168,8 @@ def check_buy_sell_signals(df):
     print(f"\nCalculating {ticker} data...")
     print(df.tail(3)[["timestamp", "volume", 'in_uptrend']])
     
-    # dynamic order_size
-    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=5)
-    bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
-    bal['free'] = pd.to_numeric(bal['free'])
-    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
-    
-    # get deno balance really quick here
-    usdt = bal[bal.asset == deno]['free'].reset_index()['free'][0]
-    
-    # get {ticker} balance here
-    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
-    
-    # re-establish order_size = 3/4 usdt balance divided by previous close_price
-    # toggle on/off:
-    #if in_position == False:
-    #    order_size = usdt * 0.25 / bars[-1][4]
-
-    # printouts
-    print(f"\nIn position: {in_position}\tPosition: {bal}")
-    print(f"Balance: ${(bal * bars[-1][4])}\tOrder size: {order_size}")
-    print(f"Min gain: +{min_gain * 100}%\tSafemode: {safe}")
-    print(f"Max loss: -{max_loss * 100}%\tS-l active: {stop_loss}")
-    # Measure Volatility#############################
+    # first things first ############################
+    # measure volatility
     # calculate {timeframe} logarithmic return
     df['returns'] = (np.log(df.close /
         df.close.shift(-1)))
@@ -189,6 +179,36 @@ def check_buy_sell_signals(df):
     print(f"\nVolatility: {volatility} Volatility avg: {volatility_avg}")
     #################################################
     
+    # dynamic order_size
+    bars = exchange.fetch_ohlcv(f'{ticker}', timeframe=timeframe, limit=5)
+    bal = pd.DataFrame(exchange.fetch_balance()['info']['balances'])
+    bal['free'] = pd.to_numeric(bal['free'])
+    bal = bal[bal.free!=0].drop(columns='locked').reset_index(drop = True)
+    
+    # get deno balance really quick here
+    deno_bal = bal[bal.asset == deno]['free'].reset_index()['free'][0]
+    
+    # get {ticker} balance here
+    bal = bal[bal['asset']==ticker[:4].replace('/','')].reset_index(drop = True).free[0]
+    
+    # re-establish order_size
+    if not in_position:
+        order_size = deno_bal * perc / bars[-1][4]
+        
+    # 
+    if in_position:
+        order_size = int(bal * perc)
+    
+    # updated info
+    info_1 = []
+    info_1.append({"inPosition":in_position, "positionBal":bal, f"{deno}bal":(bal * bars[-1][4]), "orderSize":order_size, "minGain %":min_gain * 100,
+            "maxLoss %":max_loss * 100, "safeMode":safe,
+            "stopLossActive":stop_loss})
+    print()
+    for k,v in pd.DataFrame(info_1).items():
+        print(k, v.values)
+    
+    # pertinent df indexes
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1 
     triple_previous_row_index = previous_row_index - 1
@@ -218,19 +238,23 @@ def check_buy_sell_signals(df):
     
     unsafe_sell = low_price_1m <= min_sell_price * (1 - max_loss)
 
-    # prints most recent full 1m data
-    print(f"\nOpen: {open_price_1m}\t\tMinimum sell price: {min_sell_price}")
-    print(f"High: {high_price_1m}\t\tMax low: {max_low}")
-    print(f"Low: {low_price_1m}\t\tTimeframe: {timeframe}")
-    print(f"Close: {close_price_1m}\tSafe sell: {safe_sell}")
-    print(f"Stop-loss: {min_sell_price * (1 - max_loss)}\tS-l breached {(close_price_1m / min_sell_price - 1) * 100}%: {unsafe_sell}")
+    # updated info
+    info_2 = []
+    info_2.append({"open":open_price_1m, "high":high_price_1m, "low":low_price_1m,
+            "close":close_price_1m, "stopLoss":min_sell_price * (1 - max_loss),
+            "prevPurchPrice":min_sell_price, "maxLow":max_low,
+            "timeframe":timeframe, "safeSell":safe_sell, "sL-breach":unsafe_sell, "returnSincePrev %":((close_price_1m / min_sell_price - 1) * 100)})
+    print()
+    for k,v in pd.DataFrame(info_2).items():
+        print(k, v.values)
 
     # {~peak analysis~}
     # typically, peaks can be found when the high wick appears to be the highest point in your time window (ex. 500) note: this would be most effective when 500 <= timeframe. peak is found when current close_price_1m >= df.max()['high'], as shown:
     #peak = df.max()['high'] <= close_price_1m
     # or explicitly
     peak = df.max()['high'] < close_price_1m
-    print(f"(500)-window peak sell @: {df.max()['high']}\tPeak reached: {peak}")
+    print(f"\n(500)-window peak sell @: {df.max()['high']}")
+    print(f"Peak reached: {peak}")
     # bot should execute sell order when peak == True even when df_prev & df_last in_uptrend.
     # currently, it will identify a peak when low_price >= df.max() * (1 + 11%)
     if df['in_uptrend'][triple_previous_row_index] and df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
@@ -251,7 +275,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(0.95)
             
             # pd.DataFrame(order)
             order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -264,7 +288,7 @@ def check_buy_sell_signals(df):
         # {end peak analysis}
 
     # goes to downtrend
-    if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
+    if df['in_uptrend'][triple_previous_row_index] and not df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
 
         if in_position and safe_sell:
 
@@ -282,7 +306,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(0.95)
             
             # pd.DataFrame(order)
             order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -311,7 +335,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(0.95)
             
             # pd.DataFrame(order)
             order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -348,7 +372,7 @@ def check_buy_sell_signals(df):
 
                 in_position = False
 
-                order_size = order_size*(1-0.05)
+                order_size = order_size*(0.95)
                 
                 # pd.DataFrame(order)
                 order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -365,7 +389,7 @@ def check_buy_sell_signals(df):
 
 
     # goes to uptrend
-    if not df['in_uptrend'][triple_previous_row_index] and not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
+    if not df['in_uptrend'][triple_previous_row_index] and df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
 
         print("\nChanged to uptrend! | (• ◡•)| Mathematical!")
 
@@ -417,7 +441,7 @@ def check_buy_sell_signals(df):
 
                 in_position = False
 
-                order_size = order_size*(1-0.05)
+                order_size = order_size*(0.95)
                 
                 # pd.DataFrame(order)
                 order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -448,7 +472,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(0.95)
             
             # pd.DataFrame(order)
             order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -477,7 +501,7 @@ def check_buy_sell_signals(df):
 
             in_position = False
 
-            order_size = order_size*(1-0.05)
+            order_size = order_size*(0.95)
             
             # pd.DataFrame(order)
             order = pd.merge(pd.DataFrame.from_dict(order['info']).drop(columns='fills'),pd.DataFrame.from_dict(order['info']['fills']),on=pd.DataFrame.from_dict(order['info']).index)
@@ -520,20 +544,3 @@ bot = True
 while bot:
     schedule.run_pending()
     time.sleep(0)
-#NOTES
-##############################
-# #fetch account_balance:
-# #fetch tradeable balance
-#assets = []
-#for index,asset in acct.asset.items():
-#    #print(index,asset)
-#    try: 
-#        info = exchange.fetch_ohlcv(str(asset+'/USDT'), timeframe="1m", limit=1)
-#        assets.append({'asset' : asset, 'balance': acct.balance[index],'price': info[0][1],
-#                      'sugg_trade_amt': float(acct.balance[index]*info[0][1] * (0.85)/info[0][1])})
-#    except:
-#        pass
-#assets = pd.DataFrame(assets)
-#assets = assets[assets.sugg_trade_amt > 0.5]
-#assets
-##############################
