@@ -5,7 +5,7 @@ Through our model of the SuperTrend algorithm we incorporate social sentiment an
 
 Our ultimate mission is to leverage statistical & mathematical modeling, deep financial analytics, data science, strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
 
-Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us.
+Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us. We gladly only accept work contributions as donations, as this is clearly a work in progress, but do send a "hello, world!"
 
 ---
 
