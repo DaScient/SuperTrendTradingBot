@@ -1,9 +1,9 @@
 # SuperTrendTradingBot
 A [DaScient Capital, LP](https://dascientcapital.us) proprietary program &amp; non-ML approach to the application of the SuperTrend, Moving Average(s), as well as, other technical indicators used to calculate intelligent trade signals and execute profitable buy &amp; sell orders on both Robinhood & Binance.US cryptocurrency exchanges using python.
 
-Through our model of the SuperTrend algorithm we incorporate social sentiment analyses, sophisticated technical indicators, and pre-built strategies to autonomously trade your assets for you. Requiring only little to no supervision. Our platform allows users to mirror peer portfolios. Giving you the tools you need in order to create your own & join group portfolios. Let us handle the metrics for your portfolio performance over time, so you'll spend less time supervising your assets.
+Through our model of the SuperTrend algorithm we incorporate social sentiment analyses, sophisticated technical indicators, and pre-built strategies to autonomously trade your assets for you. Requiring only little to no supervision. Our platform allows users to mirror peer portfolios. Giving you the tools you need in order to create your own, join group portfolios, & even have their performance parameters evaluated recurrently & hyper-tuned over time. 
 
-Our ultimate mission is to leverage mathematical modeling, data science, business & strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
+Our ultimate mission is to leverage statistical & mathematical modeling, deep financial analytics, data science, strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
 
 Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us.
 
