@@ -3,6 +3,8 @@ import ccxt
 from multiprocessing import Process, Pipe
 import logging
 import logging.handlers
+import json
+import numpy as np
 
 
 rootLogger = logging.getLogger('')
@@ -12,11 +14,16 @@ rootLogger.addHandler(socketHandler)
 
 
 class BinanceMaster(ccxt.binanceus):
+
+    RSI_PERIOD = 14
+    RSI_OVERBOUGHT = 70
+    RSI_OVERSOLD = 30
     
     def __init__(self, account_config=None, master_id=0):
         
         self.master_id = master_id
         self.connections = dict()
+        self.ohlcv_limit = 25
         
         if account_config is None or not self._validate_config(account_config):
             self.config = {}
@@ -35,14 +42,37 @@ class BinanceMaster(ccxt.binanceus):
     def send_message(self, conn, message):
         conn.send(message)
         
+    def _fetch_close_prices(self):
+        logger = logging.getLogger(f'maestro-{self.master_id}')
+        # using bitcoin ticker for testing
+        data = self.fetch_ohlcv('BTC/USDT', timeframe="1m", limit=self.ohlcv_limit)        
+        # grab 2nd to last element of every OHLCV list for close prices
+        return np.array([record[-2] for record in data][-(self.RSI_PERIOD+1):])        
+            
+    def calculate_rsi(self, closes):
+        logger = logging.getLogger(f'maestro-{self.master_id}')
+        # https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/rsi
+        close_deltas = np.diff(closes)
+        avg_upward_delta = abs(np.mean(close_deltas[close_deltas >= 0]))
+        avg_downward_delta = abs(np.mean(close_deltas[close_deltas < 0]))
+        rsi = 100 - ( 100 / ( 1 + (avg_upward_delta / avg_downward_delta) ) )
+        logger.info(f"RSI VALUE: {str(rsi)}")
+        
+        if rsi > self.RSI_OVERBOUGHT:
+            logger.info('RSI ACTION: SELL')
+        elif rsi < self.RSI_OVERSOLD:
+            logger.info('RSI ACTION: BUY')
+        else:
+            logger.info('RSI ACTION: NONE')
+
+        return rsi        
+        
     def run(self, connections):
         self.connections = connections
         super().__init__(self.config)
-        logger = logging.getLogger('maestro-1')
         
-        # finally showed we can fetch data inside this method/class
-        data = self.fetch_ohlcv('BTC/USDT', timeframe="1m", limit=1)[0]
-        logger.info(f"FETCH OHLCV: {str(data)}")
+        close_prices = self._fetch_close_prices()
+        rsi = self.calculate_rsi(close_prices)
         
         for name, conn in self.connections.items():
             self.send_message(conn, f'{name} - Hello from the master!')
