@@ -4,7 +4,10 @@ from multiprocessing import Process, Pipe
 import logging
 import logging.handlers
 import json
+from copy import copy
 import numpy as np
+import schedule
+from message import *
 
 
 rootLogger = logging.getLogger('')
@@ -16,8 +19,9 @@ rootLogger.addHandler(socketHandler)
 class BinanceMaster(ccxt.binanceus):
 
     RSI_PERIOD = 14
-    RSI_OVERBOUGHT = 70
-    RSI_OVERSOLD = 30
+    RSI_OVERBOUGHT = 60
+    RSI_OVERSOLD = 40
+    TEST_SYMBOL = 'BTC/USDT'
     
     def __init__(self, account_config=None, master_id=0):
         
@@ -39,44 +43,53 @@ class BinanceMaster(ccxt.binanceus):
         else:
             return contains_api_key and contains_secret_key
             
-    def send_message(self, conn, message):
-        conn.send(message)
+    def send_message(self, message):
+        for name, conn in self.connections.items():
+            conn.send(message)
+            conn.close()
         
     def _fetch_close_prices(self):
-        logger = logging.getLogger(f'maestro-{self.master_id}')
         # using bitcoin ticker for testing
-        data = self.fetch_ohlcv('BTC/USDT', timeframe="1m", limit=self.ohlcv_limit)        
+        data = self.fetch_ohlcv(self.TEST_SYMBOL, timeframe="1m", limit=self.ohlcv_limit)        
         # grab 2nd to last element of every OHLCV list for close prices
         return np.array([record[-2] for record in data][-(self.RSI_PERIOD+1):])        
             
     def calculate_rsi(self, closes):
-        logger = logging.getLogger(f'maestro-{self.master_id}')
         # https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/rsi
         close_deltas = np.diff(closes)
         avg_upward_delta = abs(np.mean(close_deltas[close_deltas >= 0]))
         avg_downward_delta = abs(np.mean(close_deltas[close_deltas < 0]))
         rsi = 100 - ( 100 / ( 1 + (avg_upward_delta / avg_downward_delta) ) )
+        return rsi
+        
+    def _execute_loop(self):
+        logger = logging.getLogger(f'maestro-{self.master_id}')
+        close_prices = self._fetch_close_prices()
+        rsi = self.calculate_rsi(close_prices)
         logger.info(f"RSI VALUE: {str(rsi)}")
         
+        message = MessageData(ORDER_MSG)
+        message.name = f'maestro-{self.master_id}'
+        message.body.symbol = self.TEST_SYMBOL
+        message.body.indicator = 'RSI'
+        
         if rsi > self.RSI_OVERBOUGHT:
-            logger.info('RSI ACTION: SELL')
+            message.body.action = 'SELL'
+            self.send_message(message.to_json())
+            logger.info(message.to_json())
         elif rsi < self.RSI_OVERSOLD:
-            logger.info('RSI ACTION: BUY')
+            message.body.action = 'BUY'
+            self.send_message(message.to_json())
+            logger.info(message.to_json())
         else:
-            logger.info('RSI ACTION: NONE')
-
-        return rsi        
+            logger.info('RSI ACTION: NONE')        
         
     def run(self, connections):
         self.connections = connections
         super().__init__(self.config)
-        
-        close_prices = self._fetch_close_prices()
-        rsi = self.calculate_rsi(close_prices)
-        
-        for name, conn in self.connections.items():
-            self.send_message(conn, f'{name} - Hello from the master!')
-            conn.close()
+        schedule.every(60).seconds.do(self._execute_loop)
+        while True:
+            schedule.run_pending()
             
 
 class BinanceTrader(ccxt.binanceus):
@@ -109,7 +122,7 @@ class BinanceTrader(ccxt.binanceus):
     def run(self, conn):
         super().__init__(self.config)
         self.recv_message(conn)
-        
+
 
 if __name__ == '__main__':
     
