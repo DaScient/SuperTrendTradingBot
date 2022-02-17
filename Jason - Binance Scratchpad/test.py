@@ -20,15 +20,12 @@ socketHandler = logging.handlers.SocketHandler('localhost', logging.handlers.DEF
 rootLogger.addHandler(socketHandler)
 
 
-def wait_til_complete():
+def wait_until_complete(manager):
     processes = multiprocessing.active_children()
     while processes:
-        time.sleep(5)
-        processes = multiprocessing.active_children()
         if len(processes) == 1 and processes[0].name.startswith('SyncManager'):
-            # need to come up with a cleaner way to end this Manager process
-            # for now this will do
-            break
+            manager.shutdown()
+        processes = multiprocessing.active_children()
 
 
 class BinanceMaster(ccxt.binanceus):
@@ -104,10 +101,10 @@ class BinanceMaster(ccxt.binanceus):
         self.log_status_table(status_table)
         
     def run(self, connections, status_table):
+        super().__init__(self.config)
         self.connections = connections
         self._pid = os.getpid()
         status_table[self._pid] = 'up'
-        super().__init__(self.config)
         
         timer = threading.Thread(target=self._timer_thread, daemon=False)
         timer.start()
@@ -133,7 +130,7 @@ class BinanceMaster(ccxt.binanceus):
         try:
             d = dict(status_table)
         except Exception as e:
-            pass
+            logger.info(str(e))
         else:
             logger.info(json.dumps(d))
             
@@ -183,7 +180,7 @@ class BinanceTrader(ccxt.binanceus):
         try:
             d = dict(status_table)
         except Exception as e:
-            pass
+            logger.info(str(e))
         else:
             logger.info(json.dumps(d))
         
@@ -210,13 +207,11 @@ if __name__ == '__main__':
                      'enableRateLimit': True,
                      'options' : {'adjustForTimeDifference': True}}
     
-    master = BinanceMaster(account_config=master_config, duration=150)
+    master = BinanceMaster(account_config=master_config)
     p = Process(target=master.run, args=(master_connections, status_table), daemon=False)
     p.start()
         
     for trader in traders:
         trader.start()
     
-    # necessary for continued access to manager context
-    # in this case our status table for the processes
-    wait_til_complete()
+    wait_until_complete(manager)
