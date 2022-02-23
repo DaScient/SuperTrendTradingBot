@@ -1,11 +1,11 @@
 # SuperTrendTradingBot
-A [DaScient Capital, LP](https://dascientcapital.us) proprietary program &amp; machine learning (ml) approach to the application of the SuperTrend, Moving Average(s), as well as, other technical indicators used to calculate intelligent trade signals and execute profitable buy &amp; sell orders on both Robinhood & Binance.US cryptocurrency exchanges using python.
+In this [DaScient Capital, LP](https://dascientcapital.us) proprietary program, we apply SuperTrend, Moving Average(s), as well as, other technical indicators used to calculate intelligent trade signals and suggests profitable buy &amp; sell orders on both Robinhood & Binance.US cryptocurrency exchanges using Python.
 
-Through our model of the SuperTrend algorithm we incorporate social sentiment analyses, sophisticated technical indicators, and pre-built strategies to autonomously trade assets for you - requiring little to absolutely no supervision. Our platform allows users to mirror peer portfolios. You can easily create your own or join publicly reviewed group-asset allocation pools, & even have your bot's decision parameters evaluated recurrently & hyper-tuned over time. 
+Through our model of the SuperTrend algorithm our future intents include the incorporation of social sentiment analyses, more sophisticated technical indicators, and pre-built strategies to autonomously trade assets for users. Our platform aims to enable users to mirror peer portfolios. Users will be able to create their own or join publicly reviewed group-asset allocation pools rated by the vox populi. Additionally, we intend to assess & evaluate the bot's modeling parameters as they are autonomously hyper-tuned recurrently over time in such that decision signals are delivered with greater confidence the longer it runs. 
 
-Our daily goal is to optimize returns and minimize loss - for everyone. We want to make trading as easy and less intimidating as robotically possible.
+Our ultimate goal is to optimize returns and minimize loss - for everyone. We want to make trading as easy and less intimidating as robotically possible.
 
-Our ultimate mission is to leverage statistical & mathematical modeling, deep financial analytics, data science, strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
+Our mission is to leverage statistical & mathematical modeling, deep financial analytics, data science, strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
 
 Find value in our project? Want to help us expand or contribute to code? Even if it's just to say thanks - please feel free to contact us. We gladly only accept work contributions as donations, as this is clearly a work in progress, but do send a "hello, world!"
 
