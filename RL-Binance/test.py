@@ -72,7 +72,7 @@ class BinanceMaster(ccxt.binanceus):
         
     def _fetch_prices(self):
         
-        data = self.fetch_ohlcv(self.TEST_SYMBOL, timeframe="1m", limit=self.ohlcv_limit)
+        data = self.fetch_ohlcv(self.TEST_SYMBOL, timeframe="1h", limit=self.ohlcv_limit)
         
         # grab elements of every OHLCV list for O,H,L,C prices
         opens = np.array([record[1] for record in data])
