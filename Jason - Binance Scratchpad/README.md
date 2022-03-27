@@ -1,4 +1,4 @@
-** Instructions **
+**Instructions**
 
 1. Open new terminal.
 2. $ python log.py
