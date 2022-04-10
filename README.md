@@ -48,11 +48,9 @@ Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?r
 
 
 ## To run
-Open terminal, locate safemode_binance_bot.py, then execute:
-'''
-$ python binance_bot.py 
-'''
-or whichever _bot.py
+Open terminal, locate safemode_binance_bot.py, then execute: <$ python binance_bot.py>or whichever _bot.py
+
+For [RL Binance Bot](https://github.com/DaScient/SuperTrendTradingBot/tree/main/RL-Binance), follow these [instructions](https://github.com/DaScient/SuperTrendTradingBot/blob/main/RL-Binance/README.md).
  
  ---
 
