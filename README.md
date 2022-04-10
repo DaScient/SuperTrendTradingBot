@@ -48,7 +48,7 @@ Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?r
 
 
 ## To run
-Open terminal, locate safemode_binance_bot.py, then execute: 
+Open terminal, locate binance_bot.py, then execute by typing: 
 ```
 $ python binance_bot.py
 ```
