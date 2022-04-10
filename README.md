@@ -52,7 +52,7 @@ Open terminal, locate safemode_binance_bot.py, then execute:
 ```
 $ python binance_bot.py
 ```
-or whichever _bot.py
+or whichever _bot.py_ from folder of choice.
 
 
 For [RL Binance Bot](https://github.com/DaScient/SuperTrendTradingBot/tree/main/RL-Binance), follow these [instructions](https://github.com/DaScient/SuperTrendTradingBot/blob/main/RL-Binance/README.md).
