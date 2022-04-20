@@ -44,7 +44,7 @@ Here's what you'll currently need in order to execute the bot locally on your ma
 Don't have Binance.US? [Sign up here!](https://accounts.binance.us/en/register?ref=52441695)
 1. After login, go to the menu settings and find API MANAGEMENT.
 2. Create an API and follow approval directives.
-3. Save and KEEP ULTRA SAFE your api.key & api.secret (in a config.py, follow [forma](https://github.com/DaScient/SuperTrendTradingBot/blob/main/Binance%20Trading%20Bot/config.py))
+3. Save and KEEP ULTRA SAFE your api.key & api.secret (in a config.py, follow [format](https://github.com/DaScient/SuperTrendTradingBot/blob/main/Binance%20Trading%20Bot/config.py)).
 
 
 ## To run
