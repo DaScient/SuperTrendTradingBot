@@ -1,7 +1,7 @@
 # Super Trend Trading Bot
 In this [DaScient Capital, LP](https://dascientcapital.us) proprietary program we apply Reinforcement Learning ensembles, the SuperTrend indicator, Kalman Filter Forecast Model/Parameterization, Simple & Exponential Moving Average(s), Relative Strength Index (RSI), as well as, other robust technical indicators that can be forked in template to calculate intelligent trade signals and suggests profitable buy &amp; sell orders on both Robinhood, Binance.US, as well as TD Ameritrade asset/cryptocurrency trading platforms using Python.
 
-You are welcome & encouraged to extrapolate, manipulate, and enhance your forked-copies, as the elementary content of this project (i.e. decision science & forecast modeling) is most certainly applicable to any predictive/time-series/ml programs & efforts. All that we ask is to cite our presence and respect the dignity of our paramount open-source community guidelines.  
+You are welcome & encouraged to extrapolate, manipulate, and enhance your forked-copies, as the elementary content of this project (i.e. decision science & forecast modeling) is most certainly applicable to any predictive/time-series/ml programs & efforts external to #trading & #assetmanagement. All that we ask is to cite our presence and respect the dignity of our paramount open-source community guidelines.  
 
 More details about initiation & project delevopment can be found in this [Medium publication](https://medium.com/coinmonks/daily-binance-us-crypto-trade-signals-fda4e8a205c8). 
 This [Kaggle Notebook](https://www.kaggle.com/code/dascient/daily-crypto-buy-sell-decision-maker) showcases an automated solution with intricately calculated recommendations.
