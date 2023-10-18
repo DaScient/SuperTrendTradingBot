@@ -8,7 +8,7 @@ This [Kaggle Notebook](https://www.kaggle.com/code/dascient/daily-crypto-buy-sel
 
 Current efforts are focused to include the incorporation of social sentiment analyses, more sophisticated technical indicators, and pre-built strategies to autonomously trade assets for users. Our platform aims to enable users to mirror peer portfolios. Users will be able to create their own or join publicly reviewed group-asset allocation pools rated by the vox populi. Additionally, we intend to assess & evaluate the bot's modeling parameters as they are autonomously hyper-tuned recurrently over time in such that decision signals are delivered with greater confidence the longer it runs. 
 
-Our ultimate goal is to optimize returns and minimize loss - for everyone. We want to make trading as easy and less intimidating as robotically possible.
+Our ultimate goal is to optimize returns and minimize losses - for everyone. We want to make trading as easy and less intimidating as robotically possible.
 
 Our mission is to leverage statistical & mathematical modeling, deep financial analytics, data science, strategic intelligence, and ml to provide reliable, intellectually resourceful, and totally open source user-friendly products. 
 
