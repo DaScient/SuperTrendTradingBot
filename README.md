@@ -1,5 +1,4 @@
 Here’s the updated README optimized for GitHub formatting with proper markdown syntax and styling for easy copy-pasting:
-
 # Super Trend Trading Bot  
 
 Welcome to the [@donutz.ai](https://donutz.ai) automated trading protocol! This bot leverages cutting-edge **Reinforcement Learning ensembles**, the **SuperTrend indicator**, **Kalman Filter Forecasting**, **Simple & Exponential Moving Averages**, **Relative Strength Index (RSI)**, and other robust technical indicators to generate intelligent trade signals. It calculates and suggests profitable buy/sell orders for both **Robinhood** and **Binance.US** platforms using **Python**.  
