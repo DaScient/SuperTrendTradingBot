@@ -84,5 +84,3 @@ Resources & Repositories
 	•	Binance Full History Dataset (2017-2020)
 
 Stay hydrated, have fun, and happy trading! :chart_with_upwards_trend:
-
-This version has proper markdown formatting with clear headers, lists, and inline links for easy readability on GitHub. Let me know if you'd like further tweaks!
