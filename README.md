@@ -59,7 +59,7 @@ To execute the bot, navigate to its directory in your terminal and run:
 ```bash  
 $ python binance_bot.py  
 
-For the Reinforcement Learning Mod, follow these instructions.
+# For the Reinforcement Learning Mod, follow these instructions.
 
 Components Overview
 
