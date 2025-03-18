@@ -1,6 +1,6 @@
 # Super Trend Trading Bot  
 
-Welcome to the [@donutz.ai](https://donutz.ai) automated trading protocol! This bot leverages cutting-edge **Reinforcement Learning ensembles**, the **SuperTrend indicator**, **Kalman Filter Forecasting**, **Simple & Exponential Moving Averages**, **Relative Strength Index (RSI)**, and other robust technical indicators to generate intelligent trade signals. It calculates and suggests profitable buy/sell orders for both **Robinhood** and **Binance.US** platforms using **Python**.  
+Welcome to the [@donutz.ai](https://donutz.ai) automated trading protocol! a [DASCIENT, LLC](https://dascient.com)This bot leverages cutting-edge **Reinforcement Learning ensembles**, the **SuperTrend indicator**, **Kalman Filter Forecasting**, **Simple & Exponential Moving Averages**, **Relative Strength Index (RSI)**, and other robust technical indicators to generate intelligent trade signals. It calculates and suggests profitable buy/sell orders for both **Robinhood** and **Binance.US** platforms using **Python**.  
 
 This project is an open-source playground for data scientists, quants, and trading enthusiasts alike. **Fork**, **tweak**, **experiment**, and **enhance** to your heart's content! The underlying decision science and forecasting principles here are widely applicable across predictive modeling, time-series analysis, and machine learning efforts well beyond trading and asset management. We only ask you to credit this repository and respect our community's guidelines.  
 
