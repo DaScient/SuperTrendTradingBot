@@ -1,0 +1,65 @@
+# ClaudeTrader Requirements
+# Python 3.9+
+
+# Core Dependencies
+numpy>=1.24.0
+pandas>=2.0.0
+pyyaml>=6.0
+
+# LLM Integration
+# anthropic>=0.18.0  # Uncomment when using actual Anthropic API
+# openai>=1.0.0      # Uncomment when using actual OpenAI API
+
+# RAG and Vector Database
+# chromadb>=0.4.0    # Uncomment when using actual ChromaDB
+# sentence-transformers>=2.2.0  # Uncomment for embeddings
+
+# NLP
+# transformers>=4.30.0
+# torch>=2.0.0
+
+# Trading and Market Data
+ccxt>=4.0.0
+requests>=2.31.0
+
+# Web Framework (API)
+flask>=3.0.0
+flask-cors>=4.0.0
+# flask-jwt-extended>=4.5.0  # Uncomment for JWT auth
+
+# WebSocket
+# websockets>=11.0  # Uncomment for WebSocket server
+
+# Data Processing
+scikit-learn>=1.3.0
+scipy>=1.11.0
+
+# Visualization (for notebooks)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Utilities
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# Logging and Monitoring
+rich>=13.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Development
+jupyter>=1.0.0
+notebook>=7.0.0
+ipython>=8.12.0
+
+# Optional: Advanced Features
+# pinecone-client>=2.2.0  # For Pinecone vector DB
+# weaviate-client>=3.22.0  # For Weaviate vector DB
+# alpaca-trade-api>=3.0.0  # For Alpaca trading
+# tweepy>=4.14.0  # For Twitter sentiment
+# praw>=7.7.0  # For Reddit sentiment
+# newspaper3k>=0.2.8  # For news scraping
+# beautifulsoup4>=4.12.0  # For web scraping
