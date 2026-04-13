@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudeTrader - AI-Powered Trading Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .header p {
+            text-align: center;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Main Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            background: var(--bg-darker);
+            border-radius: 10px;
+            padding: 20px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: var(--primary-color);
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        /* Signal Cards */
+        .signal-item {
+            background: var(--bg-darker);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .signal-item.buy {
+            border-left-color: var(--success-color);
+        }
+
+        .signal-item.sell {
+            border-left-color: var(--danger-color);
+        }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .signal-action {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .signal-action.buy {
+            background: var(--success-color);
+        }
+
+        .signal-action.sell {
+            background: var(--danger-color);
+        }
+
+        .confidence-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            transition: width 0.3s;
+        }
+
+        /* Market Stats */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: var(--bg-darker);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Strategy Comparison */
+        .strategy-item {
+            background: var(--bg-darker);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .strategy-name {
+            font-weight: bold;
+        }
+
+        .strategy-score {
+            background: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 ClaudeTrader</h1>
+            <p>Advanced AI-Powered Trading Intelligence System</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showSection('chat')">AI Assistant</button>
+            <button class="nav-btn" onclick="showSection('signals')">Signals</button>
+            <button class="nav-btn" onclick="showSection('strategies')">Strategies</button>
+            <button class="nav-btn" onclick="showSection('docs')">Documentation</button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <div class="grid">
+                <!-- Market Overview -->
+                <div class="card">
+                    <h2>📊 Market Overview</h2>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">BTC/USD</div>
+                            <div class="stat-value">$67,234</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">ETH/USD</div>
+                            <div class="stat-value">$3,456</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Market Sentiment</div>
+                            <div class="stat-value" style="color: var(--success-color);">72%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Active Signals</div>
+                            <div class="stat-value">8</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Signals -->
+                <div class="card">
+                    <h2>🎯 Recent Signals</h2>
+                    <div class="signal-item buy">
+                        <div class="signal-header">
+                            <div>
+                                <strong>BTC/USD</strong>
+                                <div style="font-size: 0.9em; color: var(--text-secondary);">SuperTrend Strategy</div>
+                            </div>
+                            <span class="signal-action buy">BUY</span>
+                        </div>
+                        <div style="font-size: 0.9em; margin-top: 5px;">Entry: $67,234 | Target: $69,000</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 85%"></div>
+                        </div>
+                        <div style="font-size: 0.85em; color: var(--text-secondary); margin-top: 5px;">Confidence: 85%</div>
+                    </div>
+
+                    <div class="signal-item sell">
+                        <div class="signal-header">
+                            <div>
+                                <strong>ETH/USD</strong>
+                                <div style="font-size: 0.9em; color: var(--text-secondary);">Multi-Factor Model</div>
+                            </div>
+                            <span class="signal-action sell">SELL</span>
+                        </div>
+                        <div style="font-size: 0.9em; margin-top: 5px;">Entry: $3,456 | Target: $3,350</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 72%"></div>
+                        </div>
+                        <div style="font-size: 0.85em; color: var(--text-secondary); margin-top: 5px;">Confidence: 72%</div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Performance -->
+                <div class="card">
+                    <h2>💼 Portfolio Performance</h2>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Return</div>
+                            <div class="stat-value" style="color: var(--success-color);">+24.5%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value">62%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Sharpe Ratio</div>
+                            <div class="stat-value">2.1</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Max Drawdown</div>
+                            <div class="stat-value" style="color: var(--danger-color);">-8.3%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy Ranking -->
+                <div class="card">
+                    <h2>🏆 Strategy Ranking</h2>
+                    <div class="strategy-item">
+                        <div class="strategy-name">SuperTrend + RSI</div>
+                        <div class="strategy-score">Score: 8.7</div>
+                    </div>
+                    <div class="strategy-item">
+                        <div class="strategy-name">RL Hybrid Agent</div>
+                        <div class="strategy-score">Score: 8.3</div>
+                    </div>
+                    <div class="strategy-item">
+                        <div class="strategy-name">Multi-Factor Model</div>
+                        <div class="strategy-score">Score: 7.9</div>
+                    </div>
+                    <div class="strategy-item">
+                        <div class="strategy-name">Sentiment + Technical</div>
+                        <div class="strategy-score">Score: 7.5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chat-section" class="section" style="display: none;">
+            <div class="card">
+                <h2>💬 AI Trading Assistant</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message assistant">
+                            Hello! I'm ClaudeTrader, your AI trading assistant. Ask me anything about:
+                            <ul style="margin-top: 10px;">
+                                <li>Market analysis and sentiment</li>
+                                <li>Trading strategies and signals</li>
+                                <li>Risk management advice</li>
+                                <li>Technical indicators</li>
+                                <li>Portfolio optimization</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Ask me anything about trading..." onkeypress="handleChatKeyPress(event)">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signals Section -->
+        <div id="signals-section" class="section" style="display: none;">
+            <div class="card">
+                <h2>🎯 Trading Signals</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Real-time trading signals generated by ClaudeTrader's multi-strategy AI engine.
+                </p>
+                <div id="signals-list">
+                    <p style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        Connect to API to see live signals...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategies Section -->
+        <div id="strategies-section" class="section" style="display: none;">
+            <div class="card">
+                <h2>📈 Available Strategies</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Explore and compare different trading strategies powered by AI and machine learning.
+                </p>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Trend Following</h3>
+                    <div class="strategy-item">
+                        <div>
+                            <div class="strategy-name">SuperTrend Indicator</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary);">ATR-based dynamic support/resistance</div>
+                        </div>
+                    </div>
+                    <div class="strategy-item">
+                        <div>
+                            <div class="strategy-name">Moving Average Crossover</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary);">Golden/Death cross signals</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Machine Learning</h3>
+                    <div class="strategy-item">
+                        <div>
+                            <div class="strategy-name">Reinforcement Learning Agent</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary);">Adaptive learning from market conditions</div>
+                        </div>
+                    </div>
+                    <div class="strategy-item">
+                        <div>
+                            <div class="strategy-name">Multi-Factor Model</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary);">Combines trend, momentum, volatility</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Hybrid Approaches</h3>
+                    <div class="strategy-item">
+                        <div>
+                            <div class="strategy-name">Sentiment + Technical</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary);">News sentiment with technical indicators</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Section -->
+        <div id="docs-section" class="section" style="display: none;">
+            <div class="card">
+                <h2>📚 Documentation</h2>
+                <div style="line-height: 1.8;">
+                    <h3 style="color: var(--primary-color); margin: 20px 0 10px;">Getting Started</h3>
+                    <p style="color: var(--text-secondary);">
+                        ClaudeTrader is an advanced AI-powered trading intelligence system that combines LLM reasoning,
+                        RAG (Retrieval-Augmented Generation), and sophisticated trading strategies.
+                    </p>
+
+                    <h3 style="color: var(--primary-color); margin: 20px 0 10px;">Quick Start</h3>
+                    <pre style="background: var(--bg-darker); padding: 15px; border-radius: 8px; overflow-x: auto;"><code style="color: var(--success-color);">pip install -r requirements.txt
+python core/engine.py</code></pre>
+
+                    <h3 style="color: var(--primary-color); margin: 20px 0 10px;">API Reference</h3>
+                    <p style="color: var(--text-secondary);">
+                        See <a href="docs/API.md" style="color: var(--primary-color);">API.md</a> for comprehensive API documentation.
+                    </p>
+
+                    <h3 style="color: var(--primary-color); margin: 20px 0 10px;">Links</h3>
+                    <ul style="color: var(--text-secondary);">
+                        <li><a href="https://github.com/DaScient/SuperTrendTradingBot" style="color: var(--primary-color);">GitHub Repository</a></li>
+                        <li><a href="README.md" style="color: var(--primary-color);">Full README</a></li>
+                        <li><a href="https://github.com/shiyu-coder/Kronos" style="color: var(--primary-color);">Kronos Framework</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                ClaudeTrader v1.0 | Built with ❤️ by <a href="https://dascient.com">DASCIENT, LLC</a><br>
+                Powered by Anthropic Claude | Inspired by <a href="https://github.com/shiyu-coder/Kronos">Kronos</a><br>
+                <strong>Disclaimer:</strong> Not financial advice. Trading involves risk of loss.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Section Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName + '-section').style.display = 'block';
+
+            // Activate clicked button
+            event.target.classList.add('active');
+        }
+
+        // Chat Functionality
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+
+            // Clear input
+            input.value = '';
+
+            // Simulate AI response (in production, this would call the actual API)
+            setTimeout(() => {
+                const response = generateMockResponse(message);
+                addMessage('assistant', response);
+            }, 1000);
+        }
+
+        function addMessage(sender, text) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function generateMockResponse(message) {
+            const msg = message.toLowerCase();
+
+            if (msg.includes('btc') || msg.includes('bitcoin')) {
+                return "BTC is showing strong bullish momentum with SuperTrend indicator in uptrend. Current price: $67,234. Support at $65,000, resistance at $70,000. RSI at 62 indicates room for further upside. Recommendation: Consider entry on pullback to $66,000 with stop at $64,500.";
+            } else if (msg.includes('sentiment')) {
+                return "Current market sentiment is moderately bullish at 72%. Social media mentions up 35% in last 24h. News sentiment positive with institutional adoption stories. Options flow shows bullish positioning. Overall: Supportive environment for continuation of uptrend.";
+            } else if (msg.includes('strategy') || msg.includes('recommend')) {
+                return "For current market conditions (trending + moderate volatility), I recommend: 1) SuperTrend + RSI combo for entries, 2) 2% position sizing per trade, 3) 1:2 risk-reward ratio, 4) Trailing stops to protect profits. This setup has 62% win rate historically in similar conditions.";
+            } else {
+                return "I'm ClaudeTrader, your AI trading assistant. I can help you with market analysis, trading signals, strategy selection, and risk management. Try asking about specific symbols, market sentiment, or trading strategies!";
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Initialize
+        console.log('ClaudeTrader Dashboard Loaded');
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+# ClaudeTrader .gitignore
+
+# API Keys and Secrets
+api_keys.yaml
+*.key
+*.pem
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Data and Cache
+data/
+cache/
+*.db
+*.sqlite
+
+# Models
+models/trained/
+*.pth
+*.h5
+*.pkl
+
+# Test Coverage
+.coverage
+htmlcov/
+
+# Temporary Files
+tmp/
+temp/

@@ -1,0 +1,66 @@
+# Example API keys configuration
+# Copy this file to api_keys.yaml and fill in your actual API keys
+# NEVER commit api_keys.yaml to version control!
+
+# LLM Provider API Keys
+anthropic:
+  api_key: "your_anthropic_api_key_here"
+
+openai:
+  api_key: "your_openai_api_key_here"
+  organization: "your_org_id_here"  # Optional
+
+# Exchange API Keys
+binance:
+  api_key: "your_binance_api_key"
+  api_secret: "your_binance_api_secret"
+
+binanceus:
+  api_key: "your_binanceus_api_key"
+  api_secret: "your_binanceus_api_secret"
+
+coinbase:
+  api_key: "your_coinbase_api_key"
+  api_secret: "your_coinbase_api_secret"
+
+# Vector Database Keys
+pinecone:
+  api_key: "your_pinecone_api_key"
+  environment: "your_environment"
+
+# News and Data APIs
+newsapi:
+  api_key: "your_newsapi_key"
+
+alpha_vantage:
+  api_key: "your_alpha_vantage_key"
+
+# Social Media APIs
+twitter:
+  api_key: "your_twitter_api_key"
+  api_secret: "your_twitter_api_secret"
+  access_token: "your_access_token"
+  access_token_secret: "your_access_token_secret"
+
+reddit:
+  client_id: "your_reddit_client_id"
+  client_secret: "your_reddit_client_secret"
+  user_agent: "ClaudeTrader/1.0"
+
+# Notification Services
+telegram:
+  bot_token: "your_telegram_bot_token"
+  chat_id: "your_chat_id"
+
+email:
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  username: "your_email@gmail.com"
+  password: "your_app_password"
+
+# Security Note:
+# - Store this file outside of version control
+# - Use environment variables in production
+# - Rotate keys regularly
+# - Use read-only API keys when possible
+# - Enable IP whitelisting on exchanges

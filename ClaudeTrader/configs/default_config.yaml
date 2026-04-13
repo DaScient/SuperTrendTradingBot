@@ -1,0 +1,199 @@
+# ClaudeTrader Configuration File
+# Version: 1.0
+
+# LLM Configuration
+llm:
+  provider: "anthropic"  # Options: anthropic, openai, local
+  model: "claude-3-5-sonnet-20240620"
+  temperature: 0.3
+  max_tokens: 4000
+  api_key_env: "ANTHROPIC_API_KEY"  # Environment variable name
+
+# RAG (Retrieval-Augmented Generation) Configuration
+rag:
+  vector_db: "chromadb"  # Options: chromadb, pinecone, weaviate
+  embedding_model: "text-embedding-3-large"
+  chunk_size: 1000
+  chunk_overlap: 200
+  similarity_threshold: 0.7
+  max_results: 5
+
+# Trading Configuration
+trading:
+  default_timeframe: "1h"
+  risk_per_trade: 0.02  # 2% of portfolio per trade
+  max_positions: 5
+  default_leverage: 1
+  exchanges:
+    - binance
+    - binanceus
+
+  # Risk Management
+  risk_management:
+    max_drawdown_pct: 0.15  # 15% max drawdown
+    stop_loss_pct: 0.02  # 2% stop loss
+    take_profit_ratio: 2.0  # 1:2 risk-reward
+    trailing_stop: true
+    trailing_stop_pct: 0.01  # 1% trailing stop
+
+# Strategy Configuration
+strategies:
+  enabled:
+    - supertrend
+    - multi_factor
+    - hybrid
+
+  parameters:
+    supertrend:
+      atr_period: 10
+      multiplier: 3.0
+
+    rl_agent:
+      model_path: "models/trained/rl_agent.pth"
+      learning_rate: 0.001
+      episodes: 1000
+      gamma: 0.99
+
+    multi_factor:
+      factors:
+        - trend
+        - momentum
+        - volatility
+      weights:
+        - 0.4
+        - 0.4
+        - 0.2
+
+    hybrid:
+      strategies:
+        - supertrend
+        - multi_factor
+      voting_method: "weighted"  # Options: majority, weighted, unanimous
+
+# Data Sources
+data:
+  primary_exchange: "binance"
+  backup_exchanges:
+    - binanceus
+    - coinbase
+
+  cache_enabled: true
+  cache_ttl_seconds: 300  # 5 minutes
+
+  news_sources:
+    - cryptonews
+    - coindesk
+    - bloomberg
+
+  social_sources:
+    - twitter
+    - reddit
+    - telegram
+
+# NLP Configuration
+nlp:
+  sentiment_model: "distilbert-base-uncased"
+  entity_extraction: true
+  intent_classification: true
+  language: "en"
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 5000
+  debug: false
+  cors_enabled: true
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+
+  authentication:
+    enabled: true
+    method: "jwt"  # Options: jwt, api_key, oauth
+    token_expiry_hours: 24
+
+# WebSocket Configuration
+websocket:
+  enabled: true
+  port: 5001
+  heartbeat_interval: 30
+
+# Frontend Configuration
+frontend:
+  theme: "dark"  # Options: dark, light, auto
+  refresh_interval: 5  # seconds
+  chart_library: "tradingview"
+  enable_notifications: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "logs/claudetrader.log"
+  max_size_mb: 100
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Performance & Optimization
+performance:
+  enable_caching: true
+  parallel_processing: true
+  max_workers: 4
+
+  # Model optimization
+  model_quantization: false
+  batch_inference: true
+  batch_size: 10
+
+# Backtesting Configuration
+backtesting:
+  default_period: "90d"
+  commission_pct: 0.001  # 0.1% commission
+  slippage_pct: 0.0005  # 0.05% slippage
+  initial_capital: 10000
+
+  metrics:
+    - total_return
+    - sharpe_ratio
+    - max_drawdown
+    - win_rate
+    - profit_factor
+    - avg_trade_duration
+
+# Notification Configuration
+notifications:
+  enabled: true
+  channels:
+    - email
+    - telegram
+    - webhook
+
+  triggers:
+    - new_signal
+    - risk_alert
+    - position_closed
+    - daily_summary
+
+# Security Configuration
+security:
+  api_key_encryption: true
+  secure_connections_only: true
+  rate_limiting: true
+  input_validation: strict
+  audit_logging: true
+
+# Feature Flags (Future Enhancements)
+features:
+  voice_assistant: false
+  multi_modal_analysis: false
+  options_trading: false
+  defi_integration: false
+  automated_execution: false
+  portfolio_mirroring: false
+  community_strategies: false
+
+# Experimental Features
+experimental:
+  quantum_optimization: false
+  federated_learning: false
+  graph_neural_networks: false
+  reinforcement_meta_learning: false
