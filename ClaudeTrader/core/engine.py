@@ -334,27 +334,46 @@ class ClaudeTrader:
         symbol: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Compare multiple strategies with AI analysis
+        Compare multiple strategies by backtesting each and ranking by Sharpe.
 
         Args:
             strategies: List of strategy names to compare
             backtest_period: Period for backtesting
-            symbol: Optional specific symbol (None = portfolio wide)
+            symbol: Symbol to backtest on (defaults to BTC/USD)
 
         Returns:
-            Comparison results with recommendations
+            Comparison results with per-strategy performance and a ranking.
         """
         logger.info(f"Comparing strategies: {strategies}")
 
-        # Placeholder for strategy comparison
-        # Future enhancement: Implement actual comparison logic
+        target_symbol = symbol or 'BTC/USD'
+        results: Dict[str, Any] = {}
+
+        for strategy_name in strategies:
+            try:
+                strategy_obj = self._get_strategy(strategy_name)
+                results[strategy_name] = strategy_obj.backtest(target_symbol, backtest_period)
+            except Exception as e:
+                logger.error(f"Error backtesting {strategy_name}: {e}")
+                results[strategy_name] = {'error': str(e)}
+
+        # Rank by Sharpe ratio where available.
+        def _sharpe(entry: Dict[str, Any]) -> float:
+            return entry.get('performance', {}).get('sharpe_ratio', float('-inf'))
+
+        ranking = sorted(
+            (name for name in results if 'error' not in results[name]),
+            key=lambda name: _sharpe(results[name]),
+            reverse=True,
+        )
 
         comparison = {
             'strategies': strategies,
             'backtest_period': backtest_period,
-            'symbol': symbol,
-            'results': {},
-            'recommendation': 'Strategy comparison placeholder - to be implemented',
+            'symbol': target_symbol,
+            'results': results,
+            'ranking': ranking,
+            'best_strategy': ranking[0] if ranking else None,
             'timestamp': datetime.now().isoformat()
         }
 
