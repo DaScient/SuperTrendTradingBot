@@ -97,7 +97,7 @@ def sharpe_ratio(
     rf_per_period = risk_free_rate / periods_per_year
     excess = arr - rf_per_period
     std = np.std(excess, ddof=1)
-    if std == 0:
+    if std <= 1e-12:
         return 0.0
     return float(np.mean(excess) / std * np.sqrt(periods_per_year))
 
@@ -117,7 +117,7 @@ def sortino_ratio(
     if downside.size == 0:
         return 0.0
     downside_std = np.sqrt(np.mean(np.square(downside)))
-    if downside_std == 0:
+    if downside_std <= 1e-12:
         return 0.0
     return float(np.mean(excess) / downside_std * np.sqrt(periods_per_year))
 
