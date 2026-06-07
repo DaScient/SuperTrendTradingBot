@@ -247,6 +247,74 @@ comparison = trader.compare_strategies(
 )
 ```
 
+## 🧪 Backtesting, Risk & Performance Modules
+
+ClaudeTrader ships production-style, dependency-light building blocks for
+systematic trading. All three are fully implemented and covered by the test
+suite in `tests/`.
+
+### Event-Driven Backtester (`utils/backtest.py`)
+
+Replays an OHLCV series bar by bar with **no look-ahead bias**, applying
+realistic execution assumptions (commission + slippage), ATR-based exits and
+fixed-fractional position sizing. Supports long and short positions and an
+optional trailing stop.
+
+```python
+from strategies import SuperTrendStrategy
+from utils.backtest import backtest_strategy
+from utils.data_fetcher import fetch_market_data
+
+data = fetch_market_data("BTC/USD", "1h", limit=2000)
+strategy = SuperTrendStrategy({"parameters": {"atr_period": 10, "multiplier": 3.0}})
+
+result = backtest_strategy(strategy, data, {
+    "commission_pct": 0.001,
+    "slippage_pct": 0.0005,
+    "risk_per_trade": 0.02,
+    "atr_stop_multiplier": 2.0,
+    "risk_reward_ratio": 2.0,
+    "trailing_stop": True,
+    "periods_per_year": 8760,  # hourly bars
+})
+
+print(result["performance"])   # full metric set
+print(result["num_trades"], "trades")
+```
+
+Each strategy also exposes a `backtest(symbol, period)` method that fetches data
+and runs the engine automatically.
+
+### Entry / Exit Protocols (`utils/risk.py`)
+
+* `compute_exit_levels(...)` — ATR-scaled stop-loss & take-profit with a target
+  risk/reward ratio.
+* `position_size_fixed_fractional(...)` / `position_size_volatility_adjusted(...)`
+  — size trades so a stop-out risks a fixed fraction of equity.
+* `update_trailing_stop(...)` — ratcheting stop that only tightens.
+* `r_multiple(...)` — express realized outcomes in units of initial risk.
+* `check_exit(...)` — conservative intrabar stop/target detection.
+
+### Performance Metrics (`utils/performance.py`)
+
+Total return, CAGR, annualized volatility, **Sharpe**, **Sortino**, **Calmar**,
+**max drawdown**, **win rate**, **profit factor**, expectancy and average
+win/loss. Annualization is configurable per timeframe via `periods_per_year`.
+
+```python
+from utils.performance import compute_metrics
+
+report = compute_metrics(equity_curve, trade_returns, periods_per_year=8760)
+print(report.to_dict())
+```
+
+### Running the Tests
+
+```bash
+pip install -r requirements.txt
+pytest tests/        # 34 tests covering performance, risk, backtest, strategies
+```
+
 ## 🔐 Security & Best Practices
 
 - API keys stored securely in encrypted configuration
@@ -294,14 +362,25 @@ strategies:
 
 ## 🌐 Frontend Dashboard
 
-The web dashboard provides:
-- Real-time market overview with AI insights
-- Interactive strategy comparison charts
-- Portfolio analytics and performance metrics
-- Chat interface for conversational queries
-- News feed with sentiment analysis
-- Trade journal and execution history
-- Backtesting interface with visualization
+The web dashboard (`frontend/index.html`) is a single, dependency-free page with
+a deliberately **minimalist, professional design** — sharp edges (zero
+border-radius), a restrained palette and thin borders. It is built to **never
+fabricate data**: every panel either shows real live data or clearly states that
+the source is unavailable.
+
+- **Markets** — live spot prices and 24h change pulled in-browser from the public
+  CoinGecko API; shows an explicit "unavailable" state on failure.
+- **News** — live, trending market headlines fed from public RSS feeds
+  (CoinDesk, Cointelegraph, Bitcoin Magazine) via a client-side RSS-to-JSON
+  bridge, sorted by recency.
+- **Strategies** — the implemented strategies and entry/exit protocols.
+- **Backtesting** — documents the metrics the engine reports plus a runnable
+  snippet (values are never pre-filled with invented results).
+- **Assistant** — a clearly-labeled offline heuristic that gives general,
+  non-fabricated guidance (production routes to an LLM via the REST API).
+
+Because it is fully static, it can be hosted directly on GitHub Pages. The live
+price and news feeds require outbound network access from the visitor's browser.
 
 Access at: [Your GitHub Pages URL]
 
