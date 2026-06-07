@@ -348,6 +348,7 @@ class Backtester:
             "stop_loss": levels.stop_loss,
             "take_profit": levels.take_profit,
             "initial_stop": levels.stop_loss,
+            "entry_commission": commission,
         }
         return cash, position
 
@@ -356,13 +357,15 @@ class Backtester:
         size = position["size"]
         entry_price = position["entry_price"]
         commission = self._commission(exit_price * size)
+        # Round-trip cost: entry commission (already paid) plus exit commission.
+        total_commission = position.get("entry_commission", 0.0) + commission
 
         if direction == "long":
             cash += size * exit_price - commission
-            pnl = size * (exit_price - entry_price) - commission
+            pnl = size * (exit_price - entry_price) - total_commission
         else:
             cash -= size * exit_price + commission
-            pnl = size * (entry_price - exit_price) - commission
+            pnl = size * (entry_price - exit_price) - total_commission
 
         notional = entry_price * size if entry_price > 0 else 0.0
         ret = (pnl / notional) if notional > 0 else 0.0
