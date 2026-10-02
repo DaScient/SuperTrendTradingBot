@@ -113,10 +113,11 @@ def sortino_ratio(
     arr = np.asarray(returns, dtype=float)
     rf_per_period = risk_free_rate / periods_per_year
     excess = arr - rf_per_period
-    downside = excess[excess < 0]
-    if downside.size == 0:
+    if not np.any(excess < 0):
         return 0.0
-    downside_std = np.sqrt(np.mean(np.square(downside)))
+    # Downside deviation is taken over *all* periods (non-negative returns
+    # count as zero), not just the losing ones.
+    downside_std = np.sqrt(np.mean(np.square(np.minimum(excess, 0.0))))
     if downside_std <= 1e-12:
         return 0.0
     return float(np.mean(excess) / downside_std * np.sqrt(periods_per_year))

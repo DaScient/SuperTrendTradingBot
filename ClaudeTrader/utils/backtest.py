@@ -153,7 +153,8 @@ class Backtester:
         high = [float(x) for x in ohlcv.get("high", [])]
         low = [float(x) for x in ohlcv.get("low", [])]
         close = [float(x) for x in ohlcv.get("close", [])]
-        open_ = [float(x) for x in ohlcv.get("open", close)]
+        has_open = bool(ohlcv.get("open"))
+        open_ = [float(x) for x in ohlcv["open"]] if has_open else list(close)
         volume = [float(x) for x in ohlcv.get("volume", [0.0] * len(close))]
 
         n = len(close)
@@ -194,31 +195,37 @@ class Backtester:
             # --- Manage an open position (check exits) ---
             if position is not None:
                 direction = position["direction"]
-                if self.trailing_stop and atr_series[i] > 0:
-                    trail_distance = atr_series[i] * self.atr_stop_multiplier
-                    position["stop_loss"] = risk_utils.update_trailing_stop(
-                        direction, price, position["stop_loss"], trail_distance
-                    )
-
+                # Check stops against the levels that were in force when this
+                # bar opened; the trailing stop is only ratcheted after the bar
+                # closes (below) so this bar's close can't tighten its own stop.
                 exit_reason = risk_utils.check_exit(
                     direction, high[i], low[i],
                     position["stop_loss"], position["take_profit"],
                 )
 
-                # Close on opposite or flat signal once past warmup.
+                # Close only on an opposite signal. "hold" means "no new
+                # signal", so the position stays open (SuperTrend, for
+                # example, emits buy/sell only on the bar the trend flips).
                 if exit_reason is None and i >= warmup:
                     action = _extract_action(
                         signal_func(self._window(open_, high, low, close, volume, i))
                     )
-                    if direction == "long" and action in ("sell", "hold"):
+                    if direction == "long" and action == "sell":
                         exit_reason = "signal"
-                    elif direction == "short" and action in ("buy", "hold"):
+                    elif direction == "short" and action == "buy":
                         exit_reason = "signal"
+
+                if exit_reason is None and self.trailing_stop and atr_series[i] > 0:
+                    trail_distance = atr_series[i] * self.atr_stop_multiplier
+                    position["stop_loss"] = risk_utils.update_trailing_stop(
+                        direction, price, position["stop_loss"], trail_distance
+                    )
 
                 if exit_reason is not None:
                     fill = self._exit_fill_price(
                         direction, exit_reason, price,
                         position["stop_loss"], position["take_profit"],
+                        open_[i] if has_open else None,
                     )
                     cash, pnl, ret = self._close_position(cash, position, fill)
                     trades.append(
@@ -384,12 +391,25 @@ class Backtester:
         return price * (1 - slip)
 
     def _exit_fill_price(
-        self, direction: str, reason: str, price: float, stop_loss: float, take_profit: float
+        self,
+        direction: str,
+        reason: str,
+        price: float,
+        stop_loss: float,
+        take_profit: float,
+        bar_open: Optional[float] = None,
     ) -> float:
+        """Fill price for an exit. If the bar opened beyond the stop or target
+        (a gap), the order fills at the open rather than at the level."""
+        long = direction == "long"
         if reason == "stop":
             base = stop_loss
+            if bar_open is not None:
+                base = min(bar_open, stop_loss) if long else max(bar_open, stop_loss)
         elif reason == "take_profit":
             base = take_profit
+            if bar_open is not None:
+                base = max(bar_open, take_profit) if long else min(bar_open, take_profit)
         else:
             base = price
         return self._apply_slippage(direction, "exit", base)

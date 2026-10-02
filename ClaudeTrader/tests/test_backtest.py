@@ -76,3 +76,57 @@ def test_commission_reduces_returns():
     cheap = backtest_strategy(strat, ohlcv, {"commission_pct": 0.0, "slippage_pct": 0.0})
     pricey = backtest_strategy(strat, ohlcv, {"commission_pct": 0.01, "slippage_pct": 0.0})
     assert cheap["final_capital"] >= pricey["final_capital"]
+
+
+def _flat_ohlcv(n=30):
+    close = [100.0] * n
+    return {
+        "open": list(close),
+        "high": [100.5] * n,
+        "low": [99.5] * n,
+        "close": close,
+    }
+
+
+def _buy_once_at(bar):
+    # Window length is i + 1, so this emits "buy" on bar ``bar`` and "hold" after.
+    return lambda w: "buy" if len(w["close"]) == bar + 1 else "hold"
+
+
+def test_hold_signal_keeps_position_open():
+    bt = Backtester(slippage_pct=0.0, commission_pct=0.0)
+    result = bt.run(_flat_ohlcv(), _buy_once_at(15))
+    assert len(result.trades) == 1
+    trade = result.trades[0]
+    assert trade.entry_index == 15
+    assert trade.exit_reason == "end_of_data"
+    assert trade.exit_index == 29
+
+
+def test_opposite_signal_closes_position():
+    signals = {15: "buy", 20: "sell"}
+    bt = Backtester(slippage_pct=0.0, commission_pct=0.0, allow_short=False)
+    result = bt.run(_flat_ohlcv(), lambda w: signals.get(len(w["close"]) - 1, "hold"))
+    assert result.trades[0].exit_reason == "signal"
+    assert result.trades[0].exit_index == 20
+
+
+def test_stop_gap_fills_at_open():
+    ohlcv = _flat_ohlcv()
+    # Bar 16 gaps down far below the ~98 stop.
+    ohlcv["open"][16], ohlcv["high"][16], ohlcv["low"][16], ohlcv["close"][16] = 90.0, 91.0, 89.0, 90.5
+    bt = Backtester(slippage_pct=0.0, commission_pct=0.0)
+    result = bt.run(ohlcv, _buy_once_at(15))
+    trade = result.trades[0]
+    assert trade.exit_reason == "stop"
+    assert trade.exit_price == 90.0
+
+
+def test_trailing_stop_does_not_use_same_bar_close():
+    ohlcv = _flat_ohlcv()
+    # Bar 16 dips to 99 then rallies to close at 103. With a 2-ATR trail the
+    # stop ratchets to ~101 only *after* the bar, so the 99 low must not stop us out.
+    ohlcv["open"][16], ohlcv["high"][16], ohlcv["low"][16], ohlcv["close"][16] = 100.0, 103.2, 99.0, 103.0
+    bt = Backtester(slippage_pct=0.0, commission_pct=0.0, trailing_stop=True, risk_reward_ratio=10.0)
+    result = bt.run(ohlcv, _buy_once_at(15))
+    assert result.trades[0].exit_index > 16

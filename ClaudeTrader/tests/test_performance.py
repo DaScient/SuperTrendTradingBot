@@ -2,6 +2,8 @@
 
 import math
 
+import pytest
+
 from utils import performance as perf
 
 
@@ -79,3 +81,11 @@ def test_periods_per_year_for():
     assert perf.periods_per_year_for("1h") == 8760
     assert perf.periods_per_year_for("1d") == 365
     assert perf.periods_per_year_for("unknown", default=42) == 42
+
+
+def test_sortino_downside_deviation_uses_all_periods():
+    returns = [0.02, -0.01, 0.03, -0.02]
+    # Downside deviation = sqrt(mean([0, 0.01^2, 0, 0.02^2])) over all 4 periods.
+    dd = math.sqrt((0.01 ** 2 + 0.02 ** 2) / 4)
+    expected = (sum(returns) / 4) / dd * math.sqrt(252)
+    assert perf.sortino_ratio(returns, 252) == pytest.approx(expected)
