@@ -7,7 +7,7 @@ pandas>=2.0.0
 pyyaml>=6.0
 
 # LLM Integration
-# anthropic>=0.18.0  # Uncomment when using actual Anthropic API
+anthropic>=1.11.0  # Real Claude calls; mock responses are used if ANTHROPIC_API_KEY is unset
 # openai>=1.0.0      # Uncomment when using actual OpenAI API
 
 # RAG and Vector Database

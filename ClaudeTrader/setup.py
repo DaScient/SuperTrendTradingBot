@@ -56,7 +56,7 @@ setup(
             "ipython>=8.12.0",
         ],
         "llm": [
-            "anthropic>=0.18.0",
+            "anthropic>=1.11.0",
             "openai>=1.0.0",
         ],
         "rag": [
@@ -68,7 +68,7 @@ setup(
             "torch>=2.0.0",
         ],
         "all": [
-            "anthropic>=0.18.0",
+            "anthropic>=1.11.0",
             "openai>=1.0.0",
             "chromadb>=0.4.0",
             "sentence-transformers>=2.2.0",
