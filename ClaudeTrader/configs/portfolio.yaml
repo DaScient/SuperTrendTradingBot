@@ -1,0 +1,94 @@
+# Per-asset RL signal agents (crypto_agents). One agent, model, state file and
+# notification thread per entry in `assets`.
+#
+#   cd ClaudeTrader
+#   python -m crypto_agents train --dry-run   # fetch data, learn, validate; sends nothing
+#   python -m crypto_agents status
+#   python -m crypto_agents test-notify       # one test iMessage per asset
+#   python -m crypto_agents run               # one pass (cron / launchd)
+#   python -m crypto_agents run --loop        # forever
+
+timeframe: 1h
+history_bars: 1500        # candles to keep per asset (Kraken caps one call at 720; the cache accumulates)
+poll_seconds: 300         # --loop cadence; signals only fire when a new bar CLOSES
+data_dir: data/crypto_agents
+providers: [binanceus, binance, kraken, coinbase]   # tried in order, per asset
+
+learning:
+  retrain_every_hours: 24
+  holdout_fraction: 0.25        # newest 25% is never trained on during validation
+  min_holdout_return: 0.0       # must be profitable out-of-sample, after costs
+  min_holdout_trades: 1
+  max_champion_age_days: 14     # a validated model survives this long if retrains start failing
+
+signals:
+  min_confidence: 0.15
+  cooldown_bars: 4
+  max_per_day: 6
+  heartbeat_hours: 24           # daily check-in so silence means "no change", not "dead"
+  failure_alert_after: 3
+
+# Defaults for every agent's Q-learner (see default_config.yaml rl_agent for all keys).
+rl_defaults:
+  allow_short: false            # spot holdings: the agent can be in or out, not short
+  transaction_cost: 0.003       # per unit of position change. SET THIS TO YOUR VENUE'S REAL
+                                # SPREAD+FEE - retail spreads are far above exchange fees and
+                                # decide whether any 1h strategy survives.
+  episodes: 300
+  seed: 42
+  features:
+    atr_period: 10
+    supertrend_multiplier: 3.0
+    rsi_period: 14
+    momentum_lookback: 5
+    volatility_lookback: 50
+
+assets:
+  - symbol: PEPE
+    name: Pepe
+    emoji: "🐸"
+    coingecko_id: pepe
+    quantity: 1356940
+    cost_usd: 6.11
+    pairs: {binanceus: PEPEUSD, binance: PEPEUSDT, kraken: PEPEUSD, coinbase: PEPE-USD}
+    rl: {transaction_cost: 0.004}   # memecoin spreads are wider
+
+  - symbol: SHIB
+    name: Shiba Inu
+    emoji: "🐕"
+    coingecko_id: shiba-inu
+    quantity: 961505
+    cost_usd: 5.63
+    pairs: {binanceus: SHIBUSD, binance: SHIBUSDT, kraken: SHIBUSD, coinbase: SHIB-USD}
+    rl: {transaction_cost: 0.004}
+
+  - symbol: TRUMP
+    name: Official Trump
+    emoji: "🇺🇸"
+    coingecko_id: official-trump
+    quantity: 2.3923
+    cost_usd: 4.94
+    pairs: {binanceus: TRUMPUSD, binance: TRUMPUSDT, kraken: TRUMPUSD, coinbase: TRUMP-USD}
+    rl: {transaction_cost: 0.004}
+
+  - symbol: XRP
+    name: XRP
+    emoji: "💧"
+    coingecko_id: ripple
+    quantity: 0.125
+    cost_usd: 0.33
+    pairs: {binanceus: XRPUSD, binance: XRPUSDT, kraken: XRPUSD, coinbase: XRP-USD}
+
+  - symbol: ETH
+    name: Ethereum
+    emoji: "💎"
+    coingecko_id: ethereum
+    quantity: 0.00000043      # dust: signals are informational only
+    pairs: {binanceus: ETHUSD, binance: ETHUSDT, kraken: ETHUSD, coinbase: ETH-USD}
+
+  - symbol: ETC
+    name: Ethereum Classic
+    emoji: "🟢"
+    coingecko_id: ethereum-classic
+    quantity: 0.00000005      # dust: signals are informational only
+    pairs: {binanceus: ETCUSD, binance: ETCUSDT, kraken: ETCUSD, coinbase: ETC-USD}

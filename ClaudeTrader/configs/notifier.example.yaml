@@ -1,0 +1,16 @@
+# Copy to configs/notifier.yaml (gitignored). Keep real phone numbers out of git.
+#
+# order: tried left to right; the first that succeeds wins.
+#   imessage    - AppleScript -> Messages.app. Must run ON a Mac signed in to iMessage.
+#   bluebubbles - REST to a BlueBubbles server on such a Mac (lets the agents run elsewhere).
+order: [imessage]
+
+imessage:
+  recipient: "+15551234567"     # phone or Apple ID email; or CT_IMESSAGE_RECIPIENT env var
+  # For a dedicated thread per coin, create one group chat per asset in Messages,
+  # then set `recipient:` on that asset in portfolio.yaml to the chat guid
+  # (looks like "iMessage;+;chat123456789"). Handles alone share one thread.
+
+# bluebubbles:
+#   url: "http://my-mac.local:1234"
+#   password: "your-bluebubbles-server-password"

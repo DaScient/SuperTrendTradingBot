@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Runs one pass every 5 minutes on a Mac. Signals only fire when a new bar closes, so this is cheap.
+     Edit the two paths, then:
+       cp deploy/com.dascient.cryptoagents.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.dascient.cryptoagents.plist
+     Run it as a LaunchAgent (your login session), not a LaunchDaemon: Messages.app needs your GUI session. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.dascient.cryptoagents</string>
+  <key>WorkingDirectory</key><string>/Users/YOU/SuperTrendTradingBot/ClaudeTrader</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/YOU/SuperTrendTradingBot/ClaudeTrader/.venv/bin/python</string>
+    <string>-m</string><string>crypto_agents</string><string>run</string>
+  </array>
+  <key>StartInterval</key><integer>300</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/tmp/cryptoagents.out.log</string>
+  <key>StandardErrorPath</key><string>/tmp/cryptoagents.err.log</string>
+</dict>
+</plist>

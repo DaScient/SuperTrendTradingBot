@@ -73,3 +73,7 @@ htmlcov/
 # Temporary Files
 tmp/
 temp/
+
+# crypto_agents: private notifier settings and runtime state (candles, models, outbox)
+configs/notifier.yaml
+data/
