@@ -1,5 +1,5 @@
 # ClaudeTrader Requirements
-# Python 3.9+
+# Python 3.10+ (3.9 works without the anthropic package; LLM calls then use mock responses)
 
 # Core Dependencies
 numpy>=1.24.0

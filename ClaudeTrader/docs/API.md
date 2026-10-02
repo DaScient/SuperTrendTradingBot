@@ -1,5 +1,9 @@
 # ClaudeTrader API Documentation
 
+> **Status: design spec, not implemented.** No REST or WebSocket server ships with
+> ClaudeTrader yet. Use the Python API in `core/engine.py` (see the main
+> [README](../README.md)).
+
 ## Overview
 
 ClaudeTrader provides a comprehensive REST API and WebSocket interface for accessing AI-powered trading intelligence. This document covers all available endpoints, parameters, and usage examples.
