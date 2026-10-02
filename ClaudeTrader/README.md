@@ -13,6 +13,7 @@ It is a decision-support and research tool. It does **not** place orders.
 | --- | --- | --- |
 | Claude LLM calls | ✅ Real Anthropic API calls when `ANTHROPIC_API_KEY` is set; canned mock responses otherwise | `models/llm_interface.py` |
 | SuperTrend strategy | ✅ Implemented (signals on trend flips) | `strategies/__init__.py` |
+| RL strategy | ✅ Tabular Q-learning agent with causal state features, in-sample training and out-of-sample backtests, JSON save/load | `strategies/rl/`, `strategies/__init__.py` |
 | Event-driven backtester | ✅ Implemented: costs, ATR stops/targets, trailing stops, long/short | `utils/backtest.py` |
 | Risk utilities | ✅ Implemented | `utils/risk.py` |
 | Performance metrics | ✅ Implemented | `utils/performance.py` |
@@ -22,7 +23,7 @@ It is a decision-support and research tool. It does **not** place orders.
 | Static web dashboard | ✅ Live public prices/news in the browser | `frontend/index.html` |
 | Market data | ⚠️ **Mock** (synthetic random-walk OHLCV). The ccxt call is stubbed. | `utils/data_fetcher.py` |
 | RAG / knowledge base | ⚠️ **In-memory mock**: a small built-in document set with mock embeddings; no vector DB | `models/rag_engine.py` |
-| Multi-factor and RL strategies | ⚠️ **Placeholders**: factor scores are constants and the RL agent always holds | `strategies/__init__.py` |
+| Multi-factor strategy | ⚠️ **Placeholder**: factor scores are constants | `strategies/__init__.py` |
 | Hybrid strategy | ⚠️ Confidence-weighted vote of SuperTrend + multi-factor, so it inherits the placeholder | `strategies/__init__.py` |
 | OpenAI / local LLM providers | ⚠️ Mock only | `models/llm_interface.py` |
 | `generate_report` | ⚠️ Placeholder | `core/engine.py` |
@@ -39,7 +40,9 @@ ClaudeTrader/
 ├── models/
 │   ├── llm_interface.py            # Anthropic Claude client (+ mock fallback)
 │   └── rag_engine.py               # In-memory retrieval over built-in trading docs (mock embeddings)
-├── strategies/__init__.py          # SuperTrend, MultiFactor, RL (placeholder), Hybrid + registry
+├── strategies/
+│   ├── __init__.py                 # SuperTrend, RL, MultiFactor (placeholder), Hybrid + registry
+│   └── rl/                         # RL features, environment, Q-learning agent, trainer
 ├── utils/
 │   ├── backtest.py                 # Event-driven backtester
 │   ├── risk.py                     # Exit levels, position sizing, trailing stops, R-multiples
@@ -136,8 +139,10 @@ including the current bar. Entries fill at that bar's close, with slippage.
 - **Exits.** It checks ATR stop-loss and take-profit levels intrabar. If both are hit in the same
   bar, it assumes the stop hit first. If the bar opens beyond a level (a gap), the order fills at
   the open.
-- **Signals.** `buy` / `sell` open a position. The opposite signal closes it, and the entry logic
-  can then reverse on the same bar. `hold` leaves an open position alone.
+- **Signals.** The strategy is asked once per bar, at the close. Its window includes `position`
+  (1 long, -1 short, 0 flat). `buy` / `sell` open a position. The opposite signal closes it and
+  reverses on the same bar. `exit` closes without reversing, and `hold` leaves an open position
+  alone.
 - **Trailing stops** (optional) ratchet after each bar closes, so a bar never tightens its own stop.
 - **Sizing** is fixed-fractional (`risk_per_trade` of equity lost at the stop), capped at available
   cash (no leverage).
@@ -164,6 +169,55 @@ print(result["performance"], result["num_trades"])
 ```
 
 Each strategy also has `backtest(symbol, period)`, which fetches data and runs the engine.
+
+## RL strategy (`strategies/rl/`)
+
+`RLStrategy` (registry name `rl_agent`) is a tabular Q-learning agent. It needs only numpy.
+
+- **State.** One of 36 market states, built from SuperTrend direction, RSI zone, N-bar momentum
+  relative to ATR, and whether ATR% is above its rolling median. The agent combines this with its
+  current position. Each bar's state uses only bars up to that point, so prefixes of a series give
+  identical states.
+- **Actions** are target positions: flat, long or short (short only if `allow_short`). They map to
+  `buy`, `sell`, and `exit` (or `hold` when already flat).
+- **Reward** is the log return of the position held into the next bar, minus `transaction_cost` for
+  each unit of position change.
+- **Training** is epsilon-greedy with linear decay. It is reproducible for a given `seed`.
+- **Confidence** is the Q-value margin between the best and second-best action. A state the agent
+  never saw in training yields `hold` with confidence 0.
+- **Persistence.** `save()` writes JSON to `model_path`, and so does training when `save_model` is
+  set. A saved model is loaded at startup when `load_model` is set and its feature settings match
+  the current config; otherwise it is ignored.
+
+`backtest()` trains on the first `train_fraction` of the data and trades only the remaining bars,
+so results are out-of-sample. An agent trained earlier in memory is retrained for every backtest.
+An agent loaded from disk is used as-is. The backtester's ATR stops and targets apply to RL
+positions too, even though the training environment doesn't model them.
+
+```python
+from strategies import RLStrategy
+from utils.backtest import backtest_strategy
+from utils.data_fetcher import fetch_market_data
+
+data = fetch_market_data("BTC/USD", "1h", limit=2000)
+rl = RLStrategy({"parameters": {"episodes": 200, "seed": 42}})
+
+bt_config = {"periods_per_year": 8760}
+info = rl.before_backtest(data, bt_config)   # trains on the first 70%, sets warmup to the split
+result = backtest_strategy(rl, data, bt_config)
+print(info["rl_training"], result["performance"])
+
+rl.train(data)          # or train on everything for live use
+rl.save()               # -> models/trained/rl_agent.json (git-ignored)
+signal = rl.generate_signal({**data, "position": 0})
+```
+
+All settings live under `strategies.parameters.rl_agent` in `configs/default_config.yaml`:
+learning rate, gamma, episodes, the exploration schedule, seed, transaction cost, shorting, the
+train/test split, persistence, and the feature definitions. Invalid values raise `ValueError`.
+
+On the mock market data (a random walk) the agent has nothing real to learn, so expect in-sample
+gains and out-of-sample losses until real data is connected.
 
 ## Risk and performance utilities
 
@@ -232,7 +286,7 @@ These are not implemented yet:
 - Real market data via ccxt.
 - A vector-DB-backed RAG engine.
 - A REST / WebSocket API as specified in `docs/API.md`.
-- Real multi-factor and RL strategies.
+- A real multi-factor strategy.
 - Performance reporting.
 - OpenAI and local LLM providers.
 

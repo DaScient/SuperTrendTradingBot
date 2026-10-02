@@ -52,10 +52,30 @@ strategies:
       multiplier: 3.0
 
     rl_agent:
-      model_path: "models/trained/rl_agent.pth"
-      learning_rate: 0.001
-      episodes: 1000
-      gamma: 0.99
+      # Tabular Q-learning agent (strategies/rl). All keys are optional.
+      model_path: "models/trained/rl_agent.json"
+      load_model: true         # use a saved model if it matches these settings
+      save_model: false        # write model_path after training
+      learning_rate: 0.1       # Q-learning step size (alpha), in (0, 1]
+      gamma: 0.95              # discount factor, in [0, 1)
+      episodes: 200
+      epsilon_start: 1.0       # exploration, decayed linearly...
+      epsilon_end: 0.05
+      epsilon_decay_fraction: 0.8   # ...over this fraction of episodes
+      seed: 42                 # reproducible training; null for random
+      transaction_cost: 0.0015 # per unit of position change during training
+      allow_short: true
+      train_fraction: 0.7      # backtest() trains on this share, trades the rest
+      min_train_bars: 200
+      features:
+        atr_period: 10
+        supertrend_multiplier: 3.0
+        rsi_period: 14
+        rsi_low: 40
+        rsi_high: 60
+        momentum_lookback: 5
+        momentum_threshold: 0.5    # x ATR% x sqrt(lookback)
+        volatility_lookback: 50
 
     multi_factor:
       factors:
