@@ -6,6 +6,7 @@ with fallback support and response caching.
 """
 
 import logging
+import os
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -13,6 +14,9 @@ import hashlib
 import json
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_ANTHROPIC_MODEL = 'claude-opus-5-5'
+DEFAULT_SYSTEM_PROMPT = "You are a helpful AI trading assistant."
 
 
 @dataclass
@@ -41,9 +45,16 @@ class LLMInterface:
         """
         self.config = config
         self.provider = config.get('provider', 'anthropic')
-        self.model = config.get('model', 'claude-3-5-sonnet-20240620')
+        self.model = config.get('model', DEFAULT_ANTHROPIC_MODEL)
+        # temperature is used by the mock/other providers; current Claude models
+        # do not accept sampling parameters, so it is not sent to Anthropic.
         self.temperature = config.get('temperature', 0.3)
-        self.max_tokens = config.get('max_tokens', 4000)
+        self.max_tokens = config.get('max_tokens', 16000)
+        # Claude effort level: low | medium | high | xhigh | max
+        self.effort = config.get('effort', 'medium')
+        # Server-side refusal fallback (routes a declined request to another model)
+        self.refusal_fallback = config.get('refusal_fallback', True)
+        self.is_mock = False
 
         # Response cache for efficiency
         self._cache = {}
@@ -61,23 +72,49 @@ class LLMInterface:
         # Placeholder for now
 
         if self.provider == 'anthropic':
-            # from anthropic import Anthropic
-            # return Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-            logger.info("Anthropic provider initialized (placeholder)")
-            return MockLLMClient(provider='anthropic')
+            return self._init_anthropic()
 
         elif self.provider == 'openai':
             # from openai import OpenAI
             # return OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
             logger.info("OpenAI provider initialized (placeholder)")
-            return MockLLMClient(provider='openai')
+            return self._mock('openai')
 
         elif self.provider == 'local':
             logger.info("Local LLM provider initialized (placeholder)")
-            return MockLLMClient(provider='local')
+            return self._mock('local')
 
         else:
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
+
+    def _init_anthropic(self):
+        """Create an Anthropic client, or fall back to the mock when no key is set"""
+        api_key_env = self.config.get('api_key_env', 'ANTHROPIC_API_KEY')
+        api_key = self.config.get('api_key') or os.getenv(api_key_env)
+
+        if self.config.get('use_mock', False):
+            logger.info("Anthropic provider: use_mock enabled, using mock client")
+            return self._mock('anthropic')
+
+        if not api_key and not os.getenv('ANTHROPIC_AUTH_TOKEN'):
+            logger.warning(
+                f"{api_key_env} is not set; using mock LLM responses. "
+                "Set it to enable real Claude calls."
+            )
+            return self._mock('anthropic')
+
+        try:
+            import anthropic
+        except ImportError:
+            logger.warning("anthropic package not installed (pip install anthropic); using mock LLM responses")
+            return self._mock('anthropic')
+
+        logger.info("Anthropic provider initialized")
+        return anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
+
+    def _mock(self, provider: str) -> 'MockLLMClient':
+        self.is_mock = True
+        return MockLLMClient(provider=provider)
 
     def generate(
         self,
@@ -165,23 +202,49 @@ class LLMInterface:
     ) -> LLMResponse:
         """Generate using Anthropic Claude"""
 
-        # Future enhancement: Actual Anthropic API call
-        # message = self._client.messages.create(
-        #     model=self.model,
-        #     max_tokens=max_tokens,
-        #     temperature=temperature,
-        #     system=system_prompt or "You are a helpful AI trading assistant.",
-        #     messages=[{"role": "user", "content": prompt}]
-        # )
-        # return LLMResponse(
-        #     text=message.content[0].text,
-        #     model=self.model,
-        #     tokens_used=message.usage.total_tokens,
-        #     latency=0.0
-        # )
+        if self.is_mock:
+            return self._client.generate(prompt, system_prompt, temperature, max_tokens)
 
-        # Placeholder implementation
-        return self._client.generate(prompt, system_prompt, temperature, max_tokens)
+        import anthropic
+
+        params = dict(
+            model=self.model,
+            max_tokens=max_tokens,
+            system=system_prompt or DEFAULT_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+            output_config={"effort": self.effort},
+        )
+        if self.refusal_fallback:
+            params.update(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+
+        start = datetime.now()
+        try:
+            message = self._client.beta.messages.create(**params)
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError("Anthropic API key was rejected") from e
+        except anthropic.NotFoundError as e:
+            raise RuntimeError(f"Unknown Claude model: {self.model}") from e
+        except anthropic.RateLimitError as e:
+            raise RuntimeError("Anthropic rate limit hit; try again shortly") from e
+        except anthropic.APIStatusError as e:
+            raise RuntimeError(f"Anthropic API error {e.status_code}: {e.message}") from e
+        except anthropic.APIConnectionError as e:
+            raise RuntimeError("Could not reach the Anthropic API") from e
+
+        if message.stop_reason == "refusal":
+            category = getattr(message.stop_details, 'category', None) if message.stop_details else None
+            raise RuntimeError(f"Claude declined the request (category: {category})")
+
+        text = "".join(block.text for block in message.content if block.type == "text")
+        if message.stop_reason == "max_tokens":
+            logger.warning("Claude response truncated at max_tokens")
+
+        return LLMResponse(
+            text=text,
+            model=message.model,
+            tokens_used=message.usage.input_tokens + message.usage.output_tokens,
+            latency=(datetime.now() - start).total_seconds()
+        )
 
     def _generate_openai(
         self,
@@ -216,7 +279,7 @@ class LLMInterface:
         temperature: Optional[float]
     ) -> str:
         """Generate cache key for a prompt"""
-        cache_input = f"{prompt}|{system_prompt}|{temperature}|{self.model}"
+        cache_input = f"{prompt}|{system_prompt}|{temperature}|{self.model}|{self.effort}"
         return hashlib.md5(cache_input.encode()).hexdigest()
 
     def _get_cached_response(self, cache_key: str) -> Optional[str]:
@@ -371,9 +434,8 @@ if __name__ == "__main__":
     # Example usage
     config = {
         'provider': 'anthropic',
-        'model': 'claude-3-5-sonnet-20240620',
-        'temperature': 0.3,
-        'max_tokens': 2000
+        'model': DEFAULT_ANTHROPIC_MODEL,
+        'max_tokens': 16000
     }
 
     llm = LLMInterface(config)

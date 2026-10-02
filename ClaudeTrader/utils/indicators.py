@@ -32,6 +32,8 @@ def calculate_ema(prices: List[float], period: int) -> List[float]:
 
 def calculate_rsi(prices: List[float], period: int = 14) -> List[float]:
     """Calculate Relative Strength Index"""
+    if len(prices) <= period:
+        return [50.0] * len(prices)
     deltas = np.diff(prices)
     gains = np.where(deltas > 0, deltas, 0)
     losses = np.where(deltas < 0, -deltas, 0)
@@ -123,6 +125,9 @@ def calculate_atr(
 ) -> List[float]:
     """Calculate Average True Range"""
 
+    if len(close) < 2:
+        return [high[0] - low[0]] if close else []
+
     tr_list = []
 
     for i in range(1, len(close)):
@@ -183,26 +188,48 @@ def calculate_adx(
     close: List[float],
     period: int = 14
 ) -> List[float]:
-    """Calculate Average Directional Index"""
+    """Calculate Average Directional Index (Wilder's smoothing).
 
-    # Simplified ADX calculation
-    # Full implementation would include +DI, -DI, and DX
+    Returns a list aligned with ``close``; bars before enough data exists are
+    filled with the first computed value.
+    """
 
-    tr_list = []
-    for i in range(1, len(close)):
-        tr = max(
+    n = len(close)
+    if n < 2 * period + 1:
+        return [25.0] * n  # Not enough data: neutral value
+
+    tr, plus_dm, minus_dm = [], [], []
+    for i in range(1, n):
+        up = high[i] - high[i-1]
+        down = low[i-1] - low[i]
+        plus_dm.append(up if up > down and up > 0 else 0.0)
+        minus_dm.append(down if down > up and down > 0 else 0.0)
+        tr.append(max(
             high[i] - low[i],
             abs(high[i] - close[i-1]),
             abs(low[i] - close[i-1])
-        )
-        tr_list.append(tr)
+        ))
 
-    atr = calculate_sma(tr_list, period)
+    def wilder(values: List[float]) -> List[float]:
+        out = [sum(values[:period])]
+        for v in values[period:]:
+            out.append(out[-1] - out[-1] / period + v)
+        return out
 
-    # Simplified ADX (placeholder)
-    adx = [min(max(val * 0.5, 0), 100) for val in atr]
+    tr_s, plus_s, minus_s = wilder(tr), wilder(plus_dm), wilder(minus_dm)
 
-    return [25] + adx  # Pad with neutral value
+    dx = []
+    for t, p, m in zip(tr_s, plus_s, minus_s):
+        plus_di = 100 * p / t if t > 0 else 0.0
+        minus_di = 100 * m / t if t > 0 else 0.0
+        di_sum = plus_di + minus_di
+        dx.append(100 * abs(plus_di - minus_di) / di_sum if di_sum > 0 else 0.0)
+
+    adx = [float(np.mean(dx[:period]))]
+    for v in dx[period:]:
+        adx.append((adx[-1] * (period - 1) + v) / period)
+
+    return [adx[0]] * (n - len(adx)) + adx
 
 
 def calculate_obv(close: List[float], volume: List[float]) -> List[float]:

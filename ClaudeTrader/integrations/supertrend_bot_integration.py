@@ -5,6 +5,7 @@ Demonstrates how to integrate ClaudeTrader with existing SuperTrend trading bots
 in the repository.
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -86,6 +87,10 @@ class SuperTrendBotIntegration:
         """
         Execute trade only if AI validates with sufficient confidence
 
+        The model is asked for an explicit decision and confidence. The trade
+        is approved only when it answers EXECUTE with a confidence at or above
+        the threshold; anything unparseable is treated as a rejection.
+
         Args:
             signal: Trading signal to validate
             confidence_threshold: Minimum confidence to execute
@@ -105,59 +110,77 @@ class SuperTrendBotIntegration:
         3. Technical setup quality
         4. Potential risks
 
-        Respond with confidence score and recommendation.
+        Explain briefly, then end your answer with exactly these two lines:
+        DECISION: EXECUTE or DECISION: SKIP
+        CONFIDENCE: <number between 0 and 1>
         """
 
         response = self.claude_trader.query(query)
+        decision, confidence = self._parse_decision(response.response)
+        approved = decision == 'EXECUTE' and confidence >= confidence_threshold
 
-        if response.confidence >= confidence_threshold:
-            # AI approves trade
-            logger.info(f"Trade approved by AI (confidence: {response.confidence})")
-            return {
-                'execute': True,
-                'confidence': response.confidence,
-                'reasoning': response.response
-            }
+        if approved:
+            logger.info(f"Trade approved by AI (confidence: {confidence})")
         else:
-            # AI suggests caution
-            logger.warning(f"Trade rejected by AI (confidence: {response.confidence})")
-            return {
-                'execute': False,
-                'confidence': response.confidence,
-                'reasoning': response.response
-            }
+            logger.warning(f"Trade rejected by AI (decision: {decision}, confidence: {confidence})")
 
-    def get_position_sizing_advice(self, signal, account_balance):
+        return {
+            'execute': approved,
+            'decision': decision,
+            'confidence': confidence,
+            'reasoning': response.response
+        }
+
+    @staticmethod
+    def _parse_decision(text):
+        """Extract (decision, confidence) from a validation response.
+
+        Returns ('SKIP', 0.0) when the response doesn't follow the format.
+        """
+        decisions = re.findall(r'DECISION:\s*(EXECUTE|SKIP)', text or '', re.IGNORECASE)
+        confidences = re.findall(r'CONFIDENCE:\s*([01](?:\.\d+)?)', text or '', re.IGNORECASE)
+        if not decisions or not confidences:
+            return 'SKIP', 0.0
+        confidence = min(max(float(confidences[-1]), 0.0), 1.0)
+        return decisions[-1].upper(), confidence
+
+    def get_position_sizing_advice(self, signal, account_balance, risk_per_trade=0.02):
         """
         Get AI-powered position sizing recommendation
 
+        Size is computed with the fixed-fractional rule (losing ``risk_per_trade``
+        of the account if the stop is hit) and capped at the account balance
+        (no leverage). The LLM's commentary is returned alongside it.
+
         Args:
-            signal: Trading signal
+            signal: Trading signal (uses ``price`` and ``stop_loss_pct``)
             account_balance: Current account balance
+            risk_per_trade: Fraction of the account to risk
 
         Returns:
-            Position sizing recommendation
+            Position sizing recommendation: ``position_notional`` in account
+            currency and ``position_units`` of the asset (when price is known).
         """
 
         query = f"""
         Recommend position size for this trade:
         Signal: {signal}
         Account Balance: ${account_balance}
-        Risk per trade: 2%
+        Risk per trade: {risk_per_trade:.1%}
 
         Consider volatility and signal confidence.
         """
 
         response = self.claude_trader.query(query)
 
-        # Parse response and calculate position size
-        # This is a simplified version - real implementation would be more sophisticated
-        risk_amount = account_balance * 0.02
+        risk_amount = account_balance * risk_per_trade
         stop_loss_pct = signal.get('stop_loss_pct', 0.02)
-        position_size = risk_amount / stop_loss_pct
+        notional = min(risk_amount / stop_loss_pct, account_balance) if stop_loss_pct > 0 else 0.0
+        price = signal.get('price')
 
         return {
-            'position_size': position_size,
+            'position_notional': notional,
+            'position_units': notional / price if price else None,
             'risk_amount': risk_amount,
             'reasoning': response.response
         }

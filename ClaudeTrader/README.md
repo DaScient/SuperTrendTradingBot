@@ -1,271 +1,154 @@
-# ClaudeTrader: Advanced LLM-Powered Trading Intelligence System
+# ClaudeTrader
 
-**ClaudeTrader** is a comprehensive, AI-driven trading assistant that combines cutting-edge Large Language Model (LLM) technology, Retrieval-Augmented Generation (RAG), Natural Language Processing (NLP), and advanced financial modeling to provide intelligent trading decision support. This system integrates seamlessly with the SuperTrendTradingBot ecosystem while introducing next-generation capabilities inspired by the Kronos intelligence framework.
+**ClaudeTrader** is a Python trading-research toolkit that sits alongside the
+SuperTrendTradingBot. It combines a SuperTrend strategy, an event-driven
+backtester, risk and performance utilities, and an LLM layer (Anthropic Claude)
+that explains signals, backtests and answers questions in natural language.
 
-## 🎯 Core Capabilities
+It is a decision-support and research tool. It does **not** place orders.
 
-### 1. **Intelligent Trading Assistant**
-- Real-time market analysis with LLM-powered insights
-- Multi-strategy recommendation engine
-- Sentiment analysis from news, social media, and market data
-- Risk assessment and portfolio optimization
-- Contextual decision support with historical pattern recognition
+## What works today
 
-### 2. **RAG-Enhanced Knowledge System**
-- Vector database of financial instruments, strategies, and market patterns
-- Semantic search across market research, technical indicators, and historical data
-- Continuous learning from trading outcomes and market events
-- Integration with external data sources (news, filings, social sentiment)
+| Area | Status | Where |
+| --- | --- | --- |
+| Claude LLM calls | ✅ Real Anthropic API calls when `ANTHROPIC_API_KEY` is set; canned mock responses otherwise | `models/llm_interface.py` |
+| SuperTrend strategy | ✅ Implemented (signals on trend flips) | `strategies/__init__.py` |
+| Event-driven backtester | ✅ Implemented: costs, ATR stops/targets, trailing stops, long/short | `utils/backtest.py` |
+| Risk utilities | ✅ Implemented | `utils/risk.py` |
+| Performance metrics | ✅ Implemented | `utils/performance.py` |
+| Technical indicators | ✅ SMA, EMA, RSI, MACD, Bollinger, ATR, Stochastic, ADX, OBV, VWAP | `utils/indicators.py` |
+| Engine (query, signals, strategy analysis/comparison) | ✅ Implemented on top of the above | `core/engine.py` |
+| SuperTrend bot integration | ✅ Signal augmentation, AI trade gating, sizing | `integrations/supertrend_bot_integration.py` |
+| Static web dashboard | ✅ Live public prices/news in the browser | `frontend/index.html` |
+| Market data | ⚠️ **Mock** (synthetic random-walk OHLCV). The ccxt call is stubbed. | `utils/data_fetcher.py` |
+| RAG / knowledge base | ⚠️ **In-memory mock**: a small built-in document set with mock embeddings; no vector DB | `models/rag_engine.py` |
+| Multi-factor and RL strategies | ⚠️ **Placeholders**: factor scores are constants and the RL agent always holds | `strategies/__init__.py` |
+| Hybrid strategy | ⚠️ Confidence-weighted vote of SuperTrend + multi-factor, so it inherits the placeholder | `strategies/__init__.py` |
+| OpenAI / local LLM providers | ⚠️ Mock only | `models/llm_interface.py` |
+| `generate_report` | ⚠️ Placeholder | `core/engine.py` |
+| REST / WebSocket API | ❌ Not implemented. [`docs/API.md`](docs/API.md) is a design spec | — |
 
-### 3. **Advanced Financial Modeling**
-- SuperTrend indicator analysis
-- Kalman Filter forecasting
-- Reinforcement Learning strategy optimization
-- Multi-timeframe analysis (day trading, swing trading, long-term)
-- Technical indicator fusion (RSI, MACD, Bollinger Bands, etc.)
+Because market data is synthetic, **backtest and signal results do not reflect real markets** until
+`utils/data_fetcher.py` is wired to an exchange.
 
-### 4. **Natural Language Interface**
-- Conversational trading queries ("What's the best strategy for BTC right now?")
-- Plain-English strategy explanations
-- Automated report generation
-- Voice-enabled trading assistant (future enhancement)
-
-### 5. **Decision Intelligence Engine**
-- Real-time signal generation
-- Multi-factor scoring system
-- Confidence intervals and uncertainty quantification
-- Backtesting and validation framework
-- Performance attribution analysis
-
-## 🏗️ Architecture
+## Layout
 
 ```
 ClaudeTrader/
-├── core/                    # Core system components
-│   ├── engine.py           # Main ClaudeTrader engine
-│   ├── orchestrator.py     # Workflow orchestration
-│   └── config_manager.py   # Configuration management
-├── models/                  # ML/AI models
-│   ├── llm_interface.py    # LLM integration (Claude, GPT, etc.)
-│   ├── rag_engine.py       # RAG implementation
-│   ├── sentiment_model.py  # Sentiment analysis
-│   └── forecasting.py      # Time-series forecasting models
-├── strategies/             # Trading strategies
-│   ├── supertrend.py       # SuperTrend-based strategies
-│   ├── rl_strategies.py    # Reinforcement Learning strategies
-│   ├── multi_factor.py     # Multi-factor models
-│   └── hybrid.py           # Hybrid strategy combiner
-├── agents/                 # Specialized AI agents
-│   ├── market_analyst.py   # Market analysis agent
-│   ├── risk_manager.py     # Risk management agent
-│   ├── portfolio_optimizer.py # Portfolio optimization
-│   └── news_monitor.py     # News and sentiment monitoring
-├── rag/                    # RAG system components
-│   ├── vector_store.py     # Vector database management
-│   ├── embeddings.py       # Text embedding generation
-│   ├── retrieval.py        # Document retrieval
-│   └── knowledge_base.py   # Knowledge base manager
-├── nlp/                    # NLP processing
-│   ├── text_processor.py   # Text preprocessing
-│   ├── entity_extraction.py # Financial entity extraction
-│   └── intent_classifier.py # User intent classification
-├── api/                    # API layer
-│   ├── rest_api.py         # REST API server
-│   ├── websocket_api.py    # WebSocket for real-time updates
-│   └── routes/             # API route definitions
-├── frontend/               # Web interface
-│   ├── index.html          # Main dashboard
-│   ├── css/                # Stylesheets
-│   ├── js/                 # JavaScript modules
-│   └── assets/             # Images, fonts, etc.
-├── notebooks/              # Jupyter notebooks
-│   ├── demo_claudetrader.ipynb
-│   ├── strategy_backtesting.ipynb
-│   └── model_training.ipynb
-├── configs/                # Configuration files
-│   ├── default_config.yaml
-│   ├── strategies.yaml
-│   └── api_keys.example.yaml
-├── utils/                  # Utility functions
-│   ├── data_fetcher.py     # Market data fetching
-│   ├── indicators.py       # Technical indicators
-│   └── helpers.py          # Helper functions
-├── docs/                   # Documentation
-│   ├── API.md              # API documentation
-│   ├── STRATEGIES.md       # Strategy guide
-│   └── DEPLOYMENT.md       # Deployment guide
-├── tests/                  # Test suite
-│   ├── test_engine.py
-│   ├── test_rag.py
-│   └── test_strategies.py
-├── integrations/           # Integration modules
-│   ├── binance_integration.py
-│   ├── robinhood_integration.py
+├── core/engine.py                  # ClaudeTrader engine: query, get_signals, analyze/compare strategies
+├── models/
+│   ├── llm_interface.py            # Anthropic Claude client (+ mock fallback)
+│   └── rag_engine.py               # In-memory retrieval over built-in trading docs (mock embeddings)
+├── strategies/__init__.py          # SuperTrend, MultiFactor, RL (placeholder), Hybrid + registry
+├── utils/
+│   ├── backtest.py                 # Event-driven backtester
+│   ├── risk.py                     # Exit levels, position sizing, trailing stops, R-multiples
+│   ├── performance.py              # Sharpe, Sortino, Calmar, drawdown, win rate, ...
+│   ├── indicators.py               # Technical indicators
+│   └── data_fetcher.py             # Market data (currently mock)
+├── integrations/
 │   └── supertrend_bot_integration.py
-├── requirements.txt        # Python dependencies
-└── setup.py               # Package setup
+├── configs/
+│   ├── default_config.yaml
+│   └── api_keys.example.yaml
+├── frontend/index.html             # Static dashboard (no build step)
+├── notebooks/demo_claudetrader.ipynb
+├── docs/                           # API.md (design spec), README.md
+├── tests/                          # pytest suite
+├── requirements.txt
+└── setup.py
 ```
 
-## 🚀 Quick Start
+## Quick start
 
-### Prerequisites
+Python 3.10+ is recommended (the `anthropic` 1.x SDK requires it).
 
 ```bash
-# Python 3.9+
-python --version
-
-# Install dependencies
+cd ClaudeTrader
 pip install -r requirements.txt
+
+# Optional: enable real Claude responses (otherwise mock responses are used)
+export ANTHROPIC_API_KEY=sk-ant-...
+
+python -m core.engine        # sample query + signals
+python -m utils.backtest     # sample SuperTrend backtest
+pytest tests/
 ```
 
-### Basic Usage
+Modules use imports rooted at the `ClaudeTrader/` directory (`from utils import ...`),
+so run them from inside `ClaudeTrader/` with `python -m`, not `python core/engine.py`.
 
 ```python
 from core.engine import ClaudeTrader
 
-# Initialize ClaudeTrader
 trader = ClaudeTrader(config_path="configs/default_config.yaml")
 
-# Ask for trading advice
-response = trader.query("What's the market sentiment for BTC/USD?")
-print(response)
+answer = trader.query("What's a sensible SuperTrend setup for a volatile market?")
+print(answer.response)
 
-# Get trading signals
-signals = trader.get_signals(symbol="BTC/USD", timeframe="1h")
-print(signals)
+for s in trader.get_signals(symbol="BTC/USD", timeframe="1h"):
+    print(s.strategy, s.action, s.confidence, s.stop_loss, s.take_profit)
 
-# Analyze a specific strategy
 analysis = trader.analyze_strategy(
     strategy="supertrend",
     symbol="ETH/USD",
-    parameters={"atr_period": 10, "multiplier": 3.0}
+    parameters={"atr_period": 10, "multiplier": 3.0},
+    backtest_period="30d",
 )
-print(analysis)
+comparison = trader.compare_strategies(["supertrend", "hybrid"], backtest_period="90d")
+print(comparison["ranking"])
 ```
 
-### Web Interface
+## Claude integration
 
-```bash
-# Start the web server
-python api/rest_api.py
+`models/llm_interface.py` calls the Anthropic Messages API through the official
+`anthropic` SDK.
 
-# Access dashboard at http://localhost:5000
+- **Mock fallback.** The real client is used only when `ANTHROPIC_API_KEY` (or the variable named
+  by `llm.api_key_env`, `ANTHROPIC_AUTH_TOKEN`, or `llm.api_key`) is set and the `anthropic` package
+  is installed. Otherwise it logs a warning and returns canned mock responses. Set `use_mock: true`
+  to force the mock.
+- **Model and effort.** The default model is `claude-opus-5-5`. `effort` (`low` … `max`) controls
+  how much the model reasons. Sampling parameters such as `temperature` are not sent to Claude
+  because current models reject them.
+- **Refusal fallback.** `refusal_fallback: true` turns on the API's server-side fallback, which
+  re-runs a declined request on another model. A refusal that still happens surfaces as an error
+  message.
+- **Errors and caching.** Errors are returned as `"Error: ..."` strings from `generate()` rather than
+  raised. Identical prompts are cached in memory for one hour.
+
+```yaml
+llm:
+  provider: "anthropic"
+  model: "claude-opus-5-5"
+  effort: "medium"
+  max_tokens: 16000
+  api_key_env: "ANTHROPIC_API_KEY"
+  refusal_fallback: true
+  use_mock: false
 ```
 
-## 📊 Key Features
+## Backtester (`utils/backtest.py`)
 
-### 1. Conversational Trading Intelligence
+The backtester walks OHLCV bar by bar and asks the strategy for a signal on data up to and
+including the current bar. Entries fill at that bar's close, with slippage.
 
-Ask questions in natural language:
-- "Should I buy Bitcoin right now?"
-- "What's the optimal SuperTrend multiplier for ETH in the current market?"
-- "Compare momentum strategies vs mean reversion for swing trading"
-- "Analyze the last 30 days of my portfolio performance"
-
-### 2. Multi-Strategy Analysis
-
-ClaudeTrader evaluates multiple strategies simultaneously:
-- **Trend Following**: SuperTrend, Moving Averages, MACD
-- **Mean Reversion**: RSI, Bollinger Bands, Stochastic
-- **Machine Learning**: RL-based strategies, Neural Networks
-- **Sentiment-Driven**: News analysis, Social media monitoring
-- **Hybrid Approaches**: Multi-factor models combining technical, fundamental, and sentiment
-
-### 3. Risk Management
-
-- Position sizing recommendations
-- Stop-loss and take-profit suggestions
-- Portfolio diversification analysis
-- Value-at-Risk (VaR) calculations
-- Drawdown monitoring and alerts
-
-### 4. Real-Time Market Intelligence
-
-- Live price monitoring with intelligent alerts
-- News and event tracking with sentiment scoring
-- Market regime detection (trending, ranging, volatile)
-- Correlation analysis across assets
-- Volume and liquidity analysis
-
-## 🧠 RAG System
-
-The Retrieval-Augmented Generation system provides contextual intelligence:
-
-### Knowledge Base Includes:
-- Historical market patterns and behaviors
-- Technical indicator definitions and optimal parameters
-- Trading strategy documentation and case studies
-- Financial news and research reports
-- Your personal trading history and performance metrics
-- Community-contributed strategies and insights
-
-### Continuous Learning:
-- Automatically indexes new market data
-- Learns from successful and failed trades
-- Updates knowledge base with latest research
-- Adapts to changing market conditions
-
-## 🔌 Integration with SuperTrendTradingBot
-
-ClaudeTrader seamlessly integrates with existing bots:
-
-```python
-from integrations.supertrend_bot_integration import SuperTrendIntegration
-
-# Initialize integration
-integration = SuperTrendIntegration()
-
-# Enhance existing bot with AI insights
-enhanced_signals = integration.augment_signals(
-    base_signals=original_bot_signals,
-    llm_analysis=True,
-    risk_assessment=True
-)
-
-# Execute trades with ClaudeTrader validation
-integration.execute_with_validation(
-    signal=trade_signal,
-    confidence_threshold=0.75
-)
-```
-
-## 📈 Performance Monitoring
-
-Track and analyze your trading performance:
-
-```python
-# Generate performance report
-report = trader.generate_report(
-    period="30d",
-    metrics=["sharpe_ratio", "max_drawdown", "win_rate"]
-)
-
-# Compare strategies
-comparison = trader.compare_strategies(
-    strategies=["supertrend", "rl_agent", "hybrid"],
-    backtest_period="90d"
-)
-```
-
-## 🧪 Backtesting, Risk & Performance Modules
-
-ClaudeTrader ships production-style, dependency-light building blocks for
-systematic trading. All three are fully implemented and covered by the test
-suite in `tests/`.
-
-### Event-Driven Backtester (`utils/backtest.py`)
-
-Replays an OHLCV series bar by bar with **no look-ahead bias**, applying
-realistic execution assumptions (commission + slippage), ATR-based exits and
-fixed-fractional position sizing. Supports long and short positions and an
-optional trailing stop.
+- **Exits.** It checks ATR stop-loss and take-profit levels intrabar. If both are hit in the same
+  bar, it assumes the stop hit first. If the bar opens beyond a level (a gap), the order fills at
+  the open.
+- **Signals.** `buy` / `sell` open a position. The opposite signal closes it, and the entry logic
+  can then reverse on the same bar. `hold` leaves an open position alone.
+- **Trailing stops** (optional) ratchet after each bar closes, so a bar never tightens its own stop.
+- **Sizing** is fixed-fractional (`risk_per_trade` of equity lost at the stop), capped at available
+  cash (no leverage).
+- **Costs.** Commission and slippage apply on both sides.
 
 ```python
 from strategies import SuperTrendStrategy
 from utils.backtest import backtest_strategy
 from utils.data_fetcher import fetch_market_data
 
-data = fetch_market_data("BTC/USD", "1h", limit=2000)
+data = fetch_market_data("BTC/USD", "1h", limit=2000)   # mock data for now
 strategy = SuperTrendStrategy({"parameters": {"atr_period": 10, "multiplier": 3.0}})
 
 result = backtest_strategy(strategy, data, {
@@ -277,183 +160,83 @@ result = backtest_strategy(strategy, data, {
     "trailing_stop": True,
     "periods_per_year": 8760,  # hourly bars
 })
-
-print(result["performance"])   # full metric set
-print(result["num_trades"], "trades")
+print(result["performance"], result["num_trades"])
 ```
 
-Each strategy also exposes a `backtest(symbol, period)` method that fetches data
-and runs the engine automatically.
+Each strategy also has `backtest(symbol, period)`, which fetches data and runs the engine.
 
-### Entry / Exit Protocols (`utils/risk.py`)
+## Risk and performance utilities
 
-* `compute_exit_levels(...)` — ATR-scaled stop-loss & take-profit with a target
-  risk/reward ratio.
-* `position_size_fixed_fractional(...)` / `position_size_volatility_adjusted(...)`
-  — size trades so a stop-out risks a fixed fraction of equity.
-* `update_trailing_stop(...)` — ratcheting stop that only tightens.
-* `r_multiple(...)` — express realized outcomes in units of initial risk.
-* `check_exit(...)` — conservative intrabar stop/target detection.
+`utils/risk.py`:
+- `compute_exit_levels`: ATR-scaled stop and target for a given risk/reward ratio.
+- `position_size_fixed_fractional`, `position_size_volatility_adjusted`.
+- `update_trailing_stop`: a stop that only tightens.
+- `r_multiple`: outcome in units of initial risk.
+- `check_exit`: intrabar stop/target detection that assumes the worse outcome.
 
-### Performance Metrics (`utils/performance.py`)
+`utils/performance.py`: total return, CAGR, annualized volatility, Sharpe, Sortino,
+Calmar, max drawdown, win rate, profit factor, expectancy, average win/loss.
+Annualization is set with `periods_per_year` (see `PERIODS_PER_YEAR`).
 
-Total return, CAGR, annualized volatility, **Sharpe**, **Sortino**, **Calmar**,
-**max drawdown**, **win rate**, **profit factor**, expectancy and average
-win/loss. Annualization is configurable per timeframe via `periods_per_year`.
+## SuperTrend bot integration
 
 ```python
-from utils.performance import compute_metrics
+from integrations.supertrend_bot_integration import SuperTrendBotIntegration
 
-report = compute_metrics(equity_curve, trade_returns, periods_per_year=8760)
-print(report.to_dict())
+integration = SuperTrendBotIntegration("configs/default_config.yaml")
+
+enhanced = integration.augment_signals(base_signals, llm_analysis=True, risk_assessment=True)
+
+verdict = integration.execute_with_validation(signal, confidence_threshold=0.75)
+# verdict["execute"] is True only if Claude answers "DECISION: EXECUTE" with
+# "CONFIDENCE" >= threshold. Unparseable answers (including mock responses) are rejected.
+
+sizing = integration.get_position_sizing_advice(
+    {"price": 67000, "stop_loss_pct": 0.02}, account_balance=10000
+)
+# -> position_notional (capped at balance), position_units, risk_amount, reasoning
 ```
 
-### Running the Tests
+## Frontend dashboard
+
+`frontend/index.html` is a single static page with no build step, suitable for GitHub Pages:
+
+- Live spot prices from the public CoinGecko API.
+- Headlines from public crypto RSS feeds.
+- Reference material on the strategies and the backtest metrics.
+
+It shows an explicit "unavailable" state rather than invented data. It does not talk to the
+Python engine: its assistant panel is an offline heuristic, not Claude.
+
+## Tests
 
 ```bash
-pip install -r requirements.txt
-pytest tests/        # 34 tests covering performance, risk, backtest, strategies
+cd ClaudeTrader
+pytest tests/
 ```
 
-## 🔐 Security & Best Practices
+The tests cover the backtester (including exit and fill rules), risk, performance, indicators,
+strategies, the engine's signal pipeline, the integration's trade gating, and the LLM interface's
+request shape and mock fallback. They make no network calls.
 
-- API keys stored securely in encrypted configuration
-- Rate limiting and authentication for API endpoints
-- Input validation and sanitization
-- Audit logging for all trading decisions
-- Sandboxed execution for strategy backtesting
+## Configuration
 
-## 🛠️ Configuration
+`configs/default_config.yaml` holds the LLM, RAG, trading, risk, strategy and backtesting
+settings. If the file is missing, the engine falls back to built-in defaults.
+`configs/api_keys.example.yaml` is a template. Copy it to `api_keys.yaml` (git-ignored); the code
+does not read it yet, so use environment variables for keys.
 
-Edit `configs/default_config.yaml` to customize:
+## Roadmap
 
-```yaml
-llm:
-  provider: "anthropic"  # anthropic, openai, local
-  model: "claude-3-5-sonnet-20240620"
-  temperature: 0.3
-  max_tokens: 4000
-
-rag:
-  vector_db: "chromadb"
-  embedding_model: "text-embedding-3-large"
-  chunk_size: 1000
-  similarity_threshold: 0.7
-
-trading:
-  default_timeframe: "1h"
-  risk_per_trade: 0.02  # 2% of portfolio
-  max_positions: 5
-  exchanges: ["binance", "binanceus"]
-
-strategies:
-  enabled:
-    - supertrend
-    - rl_agent
-    - sentiment_hybrid
-  parameters:
-    supertrend:
-      atr_period: 10
-      multiplier: 3.0
-    rl_agent:
-      learning_rate: 0.001
-      episodes: 1000
-```
-
-## 🌐 Frontend Dashboard
-
-The web dashboard (`frontend/index.html`) is a single, dependency-free page with
-a deliberately **minimalist, professional design** — sharp edges (zero
-border-radius), a restrained palette and thin borders. It is built to **never
-fabricate data**: every panel either shows real live data or clearly states that
-the source is unavailable.
-
-- **Markets** — live spot prices and 24h change pulled in-browser from the public
-  CoinGecko API; shows an explicit "unavailable" state on failure.
-- **News** — live, trending market headlines fed from public RSS feeds
-  (CoinDesk, Cointelegraph, Bitcoin Magazine) via a client-side RSS-to-JSON
-  bridge, sorted by recency.
-- **Strategies** — the implemented strategies and entry/exit protocols.
-- **Backtesting** — documents the metrics the engine reports plus a runnable
-  snippet (values are never pre-filled with invented results).
-- **Assistant** — a clearly-labeled offline heuristic that gives general,
-  non-fabricated guidance (production routes to an LLM via the REST API).
-
-Because it is fully static, it can be hosted directly on GitHub Pages. The live
-price and news feeds require outbound network access from the visitor's browser.
-
-Access at: [Your GitHub Pages URL]
-
-## 📚 API Documentation
-
-See [docs/API.md](docs/API.md) for comprehensive API reference.
-
-### REST Endpoints
-
-- `POST /api/query` - Submit natural language query
-- `GET /api/signals/:symbol` - Get trading signals
-- `POST /api/backtest` - Run strategy backtest
-- `GET /api/portfolio/analysis` - Portfolio analysis
-- `POST /api/sentiment/:symbol` - Get sentiment analysis
-
-### WebSocket Events
-
-- `market_update` - Real-time price updates
-- `signal_alert` - New trading signal
-- `news_update` - Breaking news with sentiment
-- `risk_alert` - Risk threshold breached
-
-## 🔄 Continuous Improvement
-
-ClaudeTrader includes placeholders for future enhancements:
-
-### Planned Features:
-- [ ] Multi-modal analysis (charts, images, videos)
-- [ ] Voice-enabled trading assistant
-- [ ] Advanced options and derivatives strategies
-- [ ] DeFi and on-chain analytics integration
-- [ ] Community marketplace for strategies
-- [ ] Automated hyperparameter optimization
-- [ ] Cross-exchange arbitrage detection
-- [ ] Regulatory compliance monitoring
-- [ ] Tax optimization suggestions
-- [ ] Multi-language support
-
-### Research Integrations:
-- [ ] Kronos intelligence framework modules
-- [ ] Advanced time-series transformers
-- [ ] Graph neural networks for market relationships
-- [ ] Federated learning for privacy-preserving collaboration
-- [ ] Quantum-inspired optimization algorithms
-
-## 🤝 Contributing
-
-We welcome contributions! ClaudeTrader is designed to be extensible:
-
-1. **Add New Strategies**: Implement in `strategies/` following the base strategy interface
-2. **Enhance RAG**: Contribute to the knowledge base in `rag/knowledge_base/`
-3. **Improve Models**: Submit better ML models in `models/`
-4. **Build Integrations**: Add exchange or data source integrations
-
-## 📄 License
-
-See LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built upon the SuperTrendTradingBot foundation by DASCIENT, LLC
-- Inspired by the Kronos intelligence framework
-- Leverages state-of-the-art LLM technology from Anthropic, OpenAI, and the open-source community
-- Thanks to all contributors and the trading community
-
-## 📞 Support
-
-- GitHub Issues: [Report bugs or request features]
-- Documentation: [Full documentation in docs/]
-- Community: [Join our Discord/Slack]
+These are not implemented yet:
+- Real market data via ccxt.
+- A vector-DB-backed RAG engine.
+- A REST / WebSocket API as specified in `docs/API.md`.
+- Real multi-factor and RL strategies.
+- Performance reporting.
+- OpenAI and local LLM providers.
 
 ---
 
-**Disclaimer**: ClaudeTrader is a decision-support tool, not financial advice. Always perform your own research and consult with financial professionals. Trading involves risk of loss. Past performance does not guarantee future results.
-
-**Trade Smart. Trade Safe. Trade with Intelligence.**
+**Disclaimer:** ClaudeTrader is a research and decision-support tool, not financial advice.
+Trading involves risk of loss. Past (or simulated) performance does not guarantee future results.

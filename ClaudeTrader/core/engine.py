@@ -109,9 +109,9 @@ class ClaudeTrader:
         return {
             'llm': {
                 'provider': 'anthropic',
-                'model': 'claude-3-5-sonnet-20240620',
-                'temperature': 0.3,
-                'max_tokens': 4000
+                'model': 'claude-opus-5-5',
+                'effort': 'medium',
+                'max_tokens': 16000
             },
             'rag': {
                 'vector_db': 'chromadb',
@@ -217,16 +217,17 @@ class ClaudeTrader:
 
             # Determine which strategies to use
             if strategies is None:
-                strategies = self.config['strategies']['enabled']
+                strategies = self.config.get('strategies', {}).get('enabled', ['supertrend'])
 
             signals = []
 
             # Generate signals from each strategy
             for strategy_name in strategies:
                 strategy = self._get_strategy(strategy_name)
-                signal = strategy.generate_signal(market_data)
+                strategy_signal = strategy.generate_signal(market_data)
 
-                if signal:
+                if strategy_signal:
+                    signal = self._to_trading_signal(strategy_signal, symbol, strategy_name)
                     # Enhance signal with LLM reasoning
                     enhanced_signal = self._enhance_signal_with_llm(signal, market_data)
                     signals.append(enhanced_signal)
@@ -439,6 +440,53 @@ Context from knowledge base:
 
         return self._strategies[strategy_name]
 
+    def _to_trading_signal(self, strategy_signal: Any, symbol: str, strategy_name: str) -> TradingSignal:
+        """Convert a strategy's StrategySignal into an engine TradingSignal,
+        attaching ATR-based stop-loss / take-profit levels when available."""
+        from utils.risk import compute_exit_levels
+
+        action = strategy_signal.action
+        price = strategy_signal.price
+        atr = (strategy_signal.indicators or {}).get('atr')
+        stop_loss = take_profit = None
+
+        if action in ('buy', 'sell') and atr and price and price > 0:
+            risk_cfg = self.config.get('trading', {}).get('risk_management', {})
+            levels = compute_exit_levels(
+                entry_price=price,
+                direction='long' if action == 'buy' else 'short',
+                atr=atr,
+                atr_stop_multiplier=risk_cfg.get('atr_stop_multiplier', 2.0),
+                risk_reward_ratio=risk_cfg.get('take_profit_ratio', 2.0),
+            )
+            stop_loss, take_profit = levels.stop_loss, levels.take_profit
+
+        return TradingSignal(
+            symbol=symbol,
+            action=action,
+            confidence=strategy_signal.confidence,
+            strategy=strategy_name,
+            reasoning=strategy_signal.reasoning,
+            timestamp=strategy_signal.timestamp,
+            price_target=take_profit,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+        )
+
+    @staticmethod
+    def _summarize_market_data(market_data: Dict[str, Any], bars: int = 20) -> str:
+        """Compact summary of recent bars for prompts (avoids dumping the full series)."""
+        close = market_data.get('close') or []
+        if not close:
+            return "No market data"
+        recent = [round(c, 4) for c in close[-bars:]]
+        return (
+            f"timeframe={market_data.get('timeframe')}, last_close={close[-1]:.4f}, "
+            f"high={max(market_data.get('high') or close):.4f}, "
+            f"low={min(market_data.get('low') or close):.4f} over {len(close)} bars; "
+            f"last {len(recent)} closes: {recent}"
+        )
+
     def _enhance_signal_with_llm(
         self,
         signal: TradingSignal,
@@ -452,7 +500,10 @@ Context from knowledge base:
 Symbol: {signal.symbol}
 Action: {signal.action}
 Strategy: {signal.strategy}
-Current Market Data: {market_data}
+Strategy reasoning: {signal.reasoning}
+Stop loss: {signal.stop_loss}
+Take profit: {signal.take_profit}
+Market data: {self._summarize_market_data(market_data)}
 
 Provide:
 1. Validation of the signal
