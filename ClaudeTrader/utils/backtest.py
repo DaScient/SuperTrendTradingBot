@@ -35,10 +35,14 @@ from utils.indicators import calculate_atr
 
 logger = logging.getLogger(__name__)
 
-# A signal function receives a window dict (open/high/low/close/volume lists)
-# and returns either an action string ('buy'/'sell'/'hold') or an object/dict
-# exposing an ``action`` attribute/key.
-SignalFunc = Callable[[Dict[str, List[float]]], Any]
+# A signal function receives a window dict (open/high/low/close/volume lists
+# for bars 0..i plus ``position``: 1 long, -1 short, 0 flat) and returns either
+# an action string or an object/dict exposing an ``action`` attribute/key.
+# Actions: 'buy' / 'sell' open (or reverse into) a position, 'exit' closes any
+# position without opening a new one, and 'hold' changes nothing.
+SignalFunc = Callable[[Dict[str, Any]], Any]
+
+EXIT_ACTIONS = ("exit", "close", "flat")
 
 
 @dataclass
@@ -189,93 +193,79 @@ class Backtester:
             # short: cash already includes proceeds; subtract buy-back liability
             return cash - position["size"] * price
 
-        for i in range(n):
-            price = close[i]
-
-            # --- Manage an open position (check exits) ---
-            if position is not None:
-                direction = position["direction"]
-                # Check stops against the levels that were in force when this
-                # bar opened; the trailing stop is only ratcheted after the bar
-                # closes (below) so this bar's close can't tighten its own stop.
-                exit_reason = risk_utils.check_exit(
-                    direction, high[i], low[i],
-                    position["stop_loss"], position["take_profit"],
-                )
-
-                # Close only on an opposite signal. "hold" means "no new
-                # signal", so the position stays open (SuperTrend, for
-                # example, emits buy/sell only on the bar the trend flips).
-                if exit_reason is None and i >= warmup:
-                    action = _extract_action(
-                        signal_func(self._window(open_, high, low, close, volume, i))
-                    )
-                    if direction == "long" and action == "sell":
-                        exit_reason = "signal"
-                    elif direction == "short" and action == "buy":
-                        exit_reason = "signal"
-
-                if exit_reason is None and self.trailing_stop and atr_series[i] > 0:
-                    trail_distance = atr_series[i] * self.atr_stop_multiplier
-                    position["stop_loss"] = risk_utils.update_trailing_stop(
-                        direction, price, position["stop_loss"], trail_distance
-                    )
-
-                if exit_reason is not None:
-                    fill = self._exit_fill_price(
-                        direction, exit_reason, price,
-                        position["stop_loss"], position["take_profit"],
-                        open_[i] if has_open else None,
-                    )
-                    cash, pnl, ret = self._close_position(cash, position, fill)
-                    trades.append(
-                        Trade(
-                            direction=direction,
-                            entry_index=position["entry_index"],
-                            entry_price=position["entry_price"],
-                            exit_index=i,
-                            exit_price=fill,
-                            size=position["size"],
-                            pnl=pnl,
-                            return_pct=ret,
-                            exit_reason=exit_reason,
-                        )
-                    )
-                    trade_pnls.append(pnl)
-                    position = None
-
-            # --- Look for new entries ---
-            if position is None and i >= warmup:
-                action = _extract_action(
-                    signal_func(self._window(open_, high, low, close, volume, i))
-                )
-                atr = atr_series[i]
-                if atr > 0 and action in ("buy", "sell"):
-                    direction = "long" if action == "buy" else "short"
-                    if not (direction == "short" and not self.allow_short):
-                        cash, position = self._open_position(cash, direction, price, atr, i)
-
-            equity_curve.append(equity_at(price))
-
-        # Force-close any open position at the last close.
-        if position is not None:
-            fill = self._apply_slippage(position["direction"], "exit", close[-1])
+        def record_close(exit_index: int, fill: float, reason: str) -> None:
+            nonlocal cash, position
             cash, pnl, ret = self._close_position(cash, position, fill)
             trades.append(
                 Trade(
                     direction=position["direction"],
                     entry_index=position["entry_index"],
                     entry_price=position["entry_price"],
-                    exit_index=n - 1,
+                    exit_index=exit_index,
                     exit_price=fill,
                     size=position["size"],
                     pnl=pnl,
                     return_pct=ret,
-                    exit_reason="end_of_data",
+                    exit_reason=reason,
                 )
             )
             trade_pnls.append(pnl)
             position = None
+
+        for i in range(n):
+            price = close[i]
+
+            # --- Intrabar stop / target, against the levels in force at the open ---
+            if position is not None:
+                exit_reason = risk_utils.check_exit(
+                    position["direction"], high[i], low[i],
+                    position["stop_loss"], position["take_profit"],
+                )
+                if exit_reason is not None:
+                    fill = self._exit_fill_price(
+                        position["direction"], exit_reason, price,
+                        position["stop_loss"], position["take_profit"],
+                        open_[i] if has_open else None,
+                    )
+                    record_close(i, fill, exit_reason)
+
+            # --- One strategy decision per bar, at the close ---
+            action = "hold"
+            if i >= warmup:
+                current = 0 if position is None else (1 if position["direction"] == "long" else -1)
+                action = _extract_action(
+                    signal_func(self._window(open_, high, low, close, volume, i, current))
+                )
+
+            if position is not None:
+                direction = position["direction"]
+                # "hold" keeps the position (SuperTrend, for example, emits
+                # buy/sell only on the bar the trend flips). An opposite signal
+                # or an explicit exit closes it.
+                if action in EXIT_ACTIONS or (
+                    (direction == "long" and action == "sell")
+                    or (direction == "short" and action == "buy")
+                ):
+                    record_close(i, self._exit_fill_price(direction, "signal", price, 0.0, 0.0), "signal")
+                elif self.trailing_stop and atr_series[i] > 0:
+                    # Ratchet only after the bar closes, so a bar's close never
+                    # tightens the stop its own low was tested against.
+                    trail_distance = atr_series[i] * self.atr_stop_multiplier
+                    position["stop_loss"] = risk_utils.update_trailing_stop(
+                        direction, price, position["stop_loss"], trail_distance
+                    )
+
+            # --- Entries (including a reversal on the bar an opposite signal closed) ---
+            if position is None and action in ("buy", "sell") and atr_series[i] > 0:
+                direction = "long" if action == "buy" else "short"
+                if not (direction == "short" and not self.allow_short):
+                    cash, position = self._open_position(cash, direction, price, atr_series[i], i)
+
+            equity_curve.append(equity_at(price))
+
+        # Force-close any open position at the last close.
+        if position is not None:
+            record_close(n - 1, self._apply_slippage(position["direction"], "exit", close[-1]), "end_of_data")
             equity_curve[-1] = cash
 
         if not equity_curve:
@@ -307,8 +297,10 @@ class Backtester:
         close: List[float],
         volume: List[float],
         i: int,
-    ) -> Dict[str, List[float]]:
-        """Build a data window containing bars 0..i (inclusive)."""
+        position: int = 0,
+    ) -> Dict[str, Any]:
+        """Build a data window containing bars 0..i (inclusive), plus the
+        current position (1 long, -1 short, 0 flat)."""
         end = i + 1
         return {
             "open": open_[:end],
@@ -316,6 +308,7 @@ class Backtester:
             "low": low[:end],
             "close": close[:end],
             "volume": volume[:end],
+            "position": position,
         }
 
     def _open_position(
@@ -427,7 +420,8 @@ def backtest_strategy(
         ohlcv: OHLCV dictionary.
         config: Optional dict of backtester parameters (commission_pct,
             slippage_pct, risk_per_trade, atr_period, atr_stop_multiplier,
-            risk_reward_ratio, trailing_stop, initial_capital, periods_per_year).
+            risk_reward_ratio, trailing_stop, initial_capital, periods_per_year,
+            warmup).
 
     Returns:
         A serializable dict describing the backtest outcome.
@@ -447,7 +441,13 @@ def backtest_strategy(
         risk_free_rate=config.get("risk_free_rate", 0.0),
     )
 
-    result = backtester.run(ohlcv, strategy.generate_signal)
+    # Strategies that precompute features over the full series (causally) can
+    # do so once here instead of on every bar.
+    prepare = getattr(strategy, "prepare", None)
+    if callable(prepare):
+        prepare(ohlcv)
+
+    result = backtester.run(ohlcv, strategy.generate_signal, warmup=config.get("warmup"))
     return result.to_dict()
 
 

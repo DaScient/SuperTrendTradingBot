@@ -152,6 +152,61 @@ def calculate_atr(
     return atr
 
 
+def calculate_supertrend(
+    high: List[float],
+    low: List[float],
+    close: List[float],
+    atr_period: int = 10,
+    multiplier: float = 3.0
+) -> Tuple[List[float], List[int], List[float]]:
+    """Calculate the SuperTrend line, trend direction and ATR.
+
+    All three lists are aligned with ``close`` (length n). ``direction`` is 1
+    for an uptrend and -1 for a downtrend. Each value depends only on bars up
+    to and including its own index.
+    """
+
+    n = len(close)
+    if n == 0:
+        return [], [], []
+
+    atr = calculate_atr(high, low, close, atr_period)
+
+    hl2 = [(high[i] + low[i]) / 2 for i in range(n)]
+    basic_upper = [hl2[i] + multiplier * atr[i] for i in range(n)]
+    basic_lower = [hl2[i] - multiplier * atr[i] for i in range(n)]
+
+    final_upper = [0.0] * n
+    final_lower = [0.0] * n
+    direction = [1] * n
+    supertrend = [0.0] * n
+
+    final_upper[0] = basic_upper[0]
+    final_lower[0] = basic_lower[0]
+    supertrend[0] = final_lower[0]
+
+    for i in range(1, n):
+        # Carry the band forward unless price/band movement allows a reset.
+        if basic_upper[i] < final_upper[i - 1] or close[i - 1] > final_upper[i - 1]:
+            final_upper[i] = basic_upper[i]
+        else:
+            final_upper[i] = final_upper[i - 1]
+
+        if basic_lower[i] > final_lower[i - 1] or close[i - 1] < final_lower[i - 1]:
+            final_lower[i] = basic_lower[i]
+        else:
+            final_lower[i] = final_lower[i - 1]
+
+        if direction[i - 1] == 1:
+            direction[i] = -1 if close[i] < final_lower[i] else 1
+        else:
+            direction[i] = 1 if close[i] > final_upper[i] else -1
+
+        supertrend[i] = final_lower[i] if direction[i] == 1 else final_upper[i]
+
+    return supertrend, direction, atr
+
+
 def calculate_stochastic(
     high: List[float],
     low: List[float],
